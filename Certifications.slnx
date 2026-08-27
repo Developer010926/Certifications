@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/backend/">
+    <Project Path="backend/Certifications.Api/Certifications.Api.csproj" />
+    <Project Path="backend/Certifications.Application/Certifications.Application.csproj" />
+    <Project Path="backend/Certifications.Domain/Certifications.Domain.csproj" />
+    <Project Path="backend/Certifications.Infrastructure/Certifications.Infrastructure.csproj" />
+    <Project Path="backend/Certifications.Tests/Certifications.Tests.csproj" />
+  </Folder>
+  <Folder Name="/SolutionItems/">
+    <File Path=".env" />
+    <File Path="AGENTS.md" />
+    <File Path="ApiDesign.md" />
+    <File Path="compose.yaml" />
+    <File Path="README.md" />
+    <File Path="Requirements.md" />
+    <File Path="start-docker.sh" />
+    <File Path="UiDesign.md" />
+  </Folder>
+</Solution>
