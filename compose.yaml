@@ -26,6 +26,10 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:?Set POSTGRES_DB in .env};Username=${POSTGRES_USER:?Set POSTGRES_USER in .env};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
       Security__ApiKey: ${SECURITY_API_KEY:?Set SECURITY_API_KEY in .env}
       Security__PasswordEncryptionKey: ${PASSWORD_ENCRYPTION_KEY:?Set PASSWORD_ENCRYPTION_KEY in .env}
+      Business__TimeZoneId: ${BUSINESS_TIME_ZONE:-Europe/Vienna}
+      Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:4200}
+      BootstrapAdmin__PersonalId: ${BOOTSTRAP_ADMIN_PERSONAL_ID:-КП-0001}
+      BootstrapAdmin__Password: ${BOOTSTRAP_ADMIN_PASSWORD:?Set BOOTSTRAP_ADMIN_PASSWORD in .env}
     ports:
       - "${BACKEND_PORT:-5081}:8080"
     depends_on:

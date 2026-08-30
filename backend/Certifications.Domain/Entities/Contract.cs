@@ -131,6 +131,13 @@ public sealed class Contract
                 "The contract is already closed.");
         }
 
+        if (_prolongations.Any(prolongation => !prolongation.IsCompleted))
+        {
+            throw new DomainRuleException(
+                DomainErrorCodes.CertificationInProgressExists,
+                "A contract with an unfinished certification cannot be closed.");
+        }
+
         Active = false;
         ValidTo ??= closedOn;
     }

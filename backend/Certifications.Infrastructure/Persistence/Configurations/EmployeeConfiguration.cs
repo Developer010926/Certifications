@@ -1,5 +1,6 @@
 using Certifications.Domain.Entities;
 using Certifications.Domain.Enums;
+using Certifications.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -74,5 +75,7 @@ internal sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.Ignore(employee => employee.ActiveContract);
+
+        builder.HasData(CriminalPoliceSeedData.Employees);
     }
 }

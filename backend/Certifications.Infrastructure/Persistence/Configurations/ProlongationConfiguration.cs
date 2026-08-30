@@ -1,4 +1,5 @@
 using Certifications.Domain.Entities;
+using Certifications.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -63,5 +64,7 @@ internal sealed class ProlongationConfiguration : IEntityTypeConfiguration<Prolo
             .HasDatabaseName("ux_prolongations_contract_id_in_progress");
 
         builder.Ignore(prolongation => prolongation.IsCompleted);
+
+        builder.HasData(CriminalPoliceSeedData.Prolongations);
     }
 }

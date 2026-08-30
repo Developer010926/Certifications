@@ -172,7 +172,41 @@ dotnet user-secrets set --project backend/Certifications.Api \
   "Security:ApiKey" "<api-key>"
 dotnet user-secrets set --project backend/Certifications.Api \
   "Security:PasswordEncryptionKey" "<encryption-key>"
+dotnet user-secrets set --project backend/Certifications.Api \
+  "BootstrapAdmin:Password" "<initial-admin-password>"
 ```
+
+`Security:ApiKey` must contain at least 32 characters. `Security:PasswordEncryptionKey`
+must be a Base64-encoded 32-byte AES key; one can be generated with
+`openssl rand -base64 32`. `BootstrapAdmin:Password` is used once to replace the
+non-login seed marker for administrator `КП-0001`; it must contain at least eight
+characters, including a letter and a digit. The plaintext bootstrap password is never
+stored in PostgreSQL. Keep this value in a secret store and remove it from the runtime
+environment after the first successful startup.
+
+Every `/api/v1/*` request, including login, requires `X-API-Key`. Successful login
+sets the secure `HttpOnly` cookie. Before a state-changing authenticated call, request
+`GET /api/v1/auth/csrf-token` and send its `token` value in `X-CSRF-TOKEN`. Password
+creation, generation, and reveal responses use `Cache-Control: no-store`.
+
+Production is intended to be same-origin. Development CORS only permits the origins
+listed in `Cors:AllowedOrigins` (Compose defaults to `http://localhost:4200`) and allows
+credentials. The API key should be injected by a trusted same-origin reverse proxy; it
+must not be compiled into a public Angular bundle.
+
+### OpenAPI contract
+
+Swashbuckle generates the API's OpenAPI 3 document and interactive Swagger UI. In the
+Development environment, including the default Compose setup, browse to
+`http://localhost:5081/swagger`; the runtime document is available at
+`http://localhost:5081/swagger/v1/swagger.json`.
+
+Building `Certifications.Api` also generates the checked backend contract at
+`openapi/certifications-v1.json`. Endpoint names are stable `operationId` values, and
+the document declares both the API-key and cookie-authentication requirements. When a
+future Angular workspace is added, generate its client from this file and never edit
+generated client sources manually. Swagger UI and its runtime JSON endpoint are
+Development-only.
 
 ### Миграции базы данных
 
@@ -185,6 +219,8 @@ docker compose run --rm --build migrations
 ```
 
 `POSTGRES_PASSWORD` используется образом PostgreSQL только при создании базы. Если изменить пароль в `.env` после инициализации именованного volume, сохранённый пароль роли автоматически не изменится. Для пустой локальной базы можно пересоздать volume командой `docker compose down --volumes`; эта команда безвозвратно удаляет локальные данные PostgreSQL.
+
+Миграции также добавляют демонстрационный набор из шести вымышленных сотрудников Департамента криминальной полиции. Пароли в migration хранятся как нерабочий безопасный маркер. При первом запуске API только администратор `КП-0001` получает зашифрованный bootstrap-пароль; пароли остальных демонстрационных сотрудников администратор может сгенерировать через REST API.
 
 Для создания следующей миграции требуется установленный .NET 10 SDK. Из корня репозитория выполните:
 

@@ -1,4 +1,5 @@
 using Certifications.Domain.Entities;
+using Certifications.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -91,5 +92,7 @@ internal sealed class ContractConfiguration : IEntityTypeConfiguration<Contract>
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.Ignore(contract => contract.EffectiveValidTo);
+
+        builder.HasData(CriminalPoliceSeedData.Contracts);
     }
 }

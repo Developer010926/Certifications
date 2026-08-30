@@ -1,4 +1,6 @@
 using Certifications.Domain.Entities;
+using Certifications.Domain.Enums;
+using Certifications.Domain.Services;
 using Certifications.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -107,6 +109,85 @@ public sealed class CertificationsDbContextModelTests
             constraint => constraint.Name == "ck_prolongations_date_sequence");
     }
 
+    [Fact]
+    public void Model_SeedsRepresentativeCriminalPoliceDepartment()
+    {
+        using var context = CreateContext();
+        var model = GetDesignTimeModel(context);
+        var employeeSeed = model.FindEntityType(typeof(Employee))!.GetSeedData().ToArray();
+        var contractSeed = model.FindEntityType(typeof(Contract))!.GetSeedData().ToArray();
+        var prolongationSeed = model.FindEntityType(typeof(Prolongation))!.GetSeedData().ToArray();
+
+        Assert.Equal(6, employeeSeed.Length);
+        Assert.Equal(6, contractSeed.Length);
+        Assert.Equal(2, prolongationSeed.Length);
+
+        Assert.All(
+            employeeSeed,
+            employee =>
+            {
+                Assert.Equal(
+                    employee[nameof(Employee.PersonalId)],
+                    employee[nameof(Employee.NormalizedPersonalId)]);
+                Assert.Equal(
+                    "seed-data-password-not-provisioned",
+                    employee[nameof(Employee.EncryptedPassword)]);
+            });
+
+        var administrator = Assert.Single(
+            employeeSeed,
+            employee => (bool)employee[nameof(Employee.IsAdmin)]!);
+        Assert.Equal(
+            AdminMode.Administration,
+            administrator[nameof(Employee.PreferredAdminMode)]);
+
+        var employeeIds = employeeSeed
+            .Select(employee => (Guid)employee[nameof(Employee.Id)]!)
+            .ToHashSet();
+
+        Assert.All(
+            contractSeed,
+            contract =>
+            {
+                Assert.True((long)contract[nameof(Contract.Id)]! < 0);
+                Assert.Contains((Guid)contract[nameof(Contract.EmployeeId)]!, employeeIds);
+                Assert.Equal(
+                    "Департамент криминальной полиции",
+                    contract[nameof(Contract.Division)]);
+            });
+
+        var contractIds = contractSeed
+            .Select(contract => (long)contract[nameof(Contract.Id)]!)
+            .ToHashSet();
+
+        Assert.All(
+            prolongationSeed,
+            prolongation =>
+            {
+                Assert.True((long)prolongation[nameof(Prolongation.Id)]! < 0);
+                Assert.Contains(
+                    (long)prolongation[nameof(Prolongation.ContractId)]!,
+                    contractIds);
+                AssertDateSequence(prolongation);
+            });
+
+        var personalIdsByEmployeeId = employeeSeed.ToDictionary(
+            employee => (Guid)employee[nameof(Employee.Id)]!,
+            employee => (string)employee[nameof(Employee.PersonalId)]!);
+        var statusesByPersonalId = contractSeed.ToDictionary(
+            contract => personalIdsByEmployeeId[(Guid)contract[nameof(Contract.EmployeeId)]!],
+            contract => CertificationStatusCalculator.Calculate(
+                CreateContract(contract, prolongationSeed),
+                new DateOnly(2026, 8, 27)));
+
+        Assert.Equal(CertificationStatus.ContractValid, statusesByPersonalId["КП-0001"]);
+        Assert.Equal(CertificationStatus.CertificationPending, statusesByPersonalId["КП-0002"]);
+        Assert.Equal(CertificationStatus.CertificationMissing, statusesByPersonalId["КП-0003"]);
+        Assert.Equal(CertificationStatus.CertificationInProgress, statusesByPersonalId["КП-0004"]);
+        Assert.Equal(CertificationStatus.ContractValid, statusesByPersonalId["КП-0005"]);
+        Assert.Equal(CertificationStatus.NotApplicable, statusesByPersonalId["КП-0006"]);
+    }
+
     private static CertificationsDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<CertificationsDbContext>()
@@ -119,5 +200,69 @@ public sealed class CertificationsDbContextModelTests
     private static IModel GetDesignTimeModel(CertificationsDbContext context)
     {
         return context.GetService<IDesignTimeModel>().Model;
+    }
+
+    private static Contract CreateContract(
+        IDictionary<string, object?> contractSeed,
+        IEnumerable<IDictionary<string, object?>> prolongationSeed)
+    {
+        var contract = Contract.Create(
+            (long)contractSeed[nameof(Contract.Id)]!,
+            (Guid)contractSeed[nameof(Contract.EmployeeId)]!,
+            (string)contractSeed[nameof(Contract.Position)]!,
+            (DateOnly)contractSeed[nameof(Contract.ContractDate)]!,
+            (string?)contractSeed[nameof(Contract.Department)],
+            (string?)contractSeed[nameof(Contract.Division)],
+            (DateOnly?)contractSeed[nameof(Contract.ValidTo)],
+            (int)contractSeed[nameof(Contract.ProlongationWarningMonths)]!,
+            (int)contractSeed[nameof(Contract.ProlongationAlertMonths)]!,
+            (int)contractSeed[nameof(Contract.ProlongationForYears)]!);
+
+        if (!(bool)contractSeed[nameof(Contract.Active)]!)
+        {
+            contract.Close((DateOnly)contractSeed[nameof(Contract.ValidTo)]!);
+            return contract;
+        }
+
+        foreach (var seed in prolongationSeed.Where(
+                     item => (long)item[nameof(Prolongation.ContractId)]! == contract.Id))
+        {
+            var prolongation = Prolongation.Create(
+                (long)seed[nameof(Prolongation.Id)]!,
+                contract.Id,
+                (string)seed[nameof(Prolongation.Assessor)]!,
+                (DateOnly)seed[nameof(Prolongation.CertificationDate)]!);
+            var protocolDate = (DateOnly?)seed[nameof(Prolongation.ProtocolDate)];
+            var prolongationSend = (DateOnly?)seed[nameof(Prolongation.ProlongationSend)];
+            var prolongationReturned = (DateOnly?)seed[nameof(Prolongation.ProlongationReturned)];
+
+            prolongation.Update(
+                prolongation.Assessor,
+                prolongation.CertificationDate,
+                protocolDate,
+                prolongationSend);
+            contract.AddProlongation(prolongation);
+
+            if (prolongationReturned.HasValue)
+            {
+                contract.CompleteProlongation(prolongation.Id, prolongationReturned.Value);
+            }
+        }
+
+        return contract;
+    }
+
+    private static void AssertDateSequence(IDictionary<string, object?> prolongation)
+    {
+        var certificationDate = (DateOnly)prolongation[nameof(Prolongation.CertificationDate)]!;
+        var protocolDate = (DateOnly?)prolongation[nameof(Prolongation.ProtocolDate)];
+        var prolongationSend = (DateOnly?)prolongation[nameof(Prolongation.ProlongationSend)];
+        var prolongationReturned = (DateOnly?)prolongation[nameof(Prolongation.ProlongationReturned)];
+
+        Assert.True(!protocolDate.HasValue || protocolDate.Value >= certificationDate);
+        Assert.True(!prolongationSend.HasValue
+            || protocolDate.HasValue && prolongationSend.Value >= protocolDate.Value);
+        Assert.True(!prolongationReturned.HasValue
+            || prolongationSend.HasValue && prolongationReturned.Value >= prolongationSend.Value);
     }
 }

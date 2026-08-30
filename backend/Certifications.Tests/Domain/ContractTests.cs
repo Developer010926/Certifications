@@ -114,6 +114,19 @@ public sealed class ContractTests
     }
 
     [Fact]
+    public void Close_RejectsContractWithUnfinishedCertification()
+    {
+        var contract = CreateContract();
+        contract.AddProlongation(CreateProlongation(contract.Id, 1));
+
+        var exception = Assert.Throws<DomainRuleException>(() =>
+            contract.Close(new DateOnly(2026, 8, 27)));
+
+        Assert.Equal(DomainErrorCodes.CertificationInProgressExists, exception.Code);
+        Assert.True(contract.Active);
+    }
+
+    [Fact]
     public void AddProlongation_RejectsASecondInProgressCertification()
     {
         var contract = CreateContract();

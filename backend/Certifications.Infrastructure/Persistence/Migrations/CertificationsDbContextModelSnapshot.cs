@@ -105,6 +105,92 @@ namespace Certifications.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_contracts_renewal_settings", "prolongation_warning_months >= 0 AND prolongation_alert_months >= 0 AND prolongation_for_years > 0 AND prolongation_alert_months < prolongation_warning_months");
                         });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = -1001L,
+                            Active = true,
+                            ContractDate = new DateOnly(2024, 1, 15),
+                            Department = "Руководство департамента",
+                            Division = "Департамент криминальной полиции",
+                            EmployeeId = new Guid("c0000000-0000-0000-0000-000000000001"),
+                            Position = "Начальник департамента",
+                            ProlongationAlertMonths = 1,
+                            ProlongationForYears = 1,
+                            ProlongationWarningMonths = 3,
+                            ValidTo = new DateOnly(2027, 12, 31)
+                        },
+                        new
+                        {
+                            Id = -1002L,
+                            Active = true,
+                            ContractDate = new DateOnly(2023, 11, 15),
+                            Department = "Отдел уголовного розыска",
+                            Division = "Департамент криминальной полиции",
+                            EmployeeId = new Guid("c0000000-0000-0000-0000-000000000002"),
+                            Position = "Начальник отдела",
+                            ProlongationAlertMonths = 1,
+                            ProlongationForYears = 1,
+                            ProlongationWarningMonths = 3,
+                            ValidTo = new DateOnly(2026, 11, 15)
+                        },
+                        new
+                        {
+                            Id = -1003L,
+                            Active = true,
+                            ContractDate = new DateOnly(2023, 9, 15),
+                            Department = "Отдел уголовного розыска",
+                            Division = "Департамент криминальной полиции",
+                            EmployeeId = new Guid("c0000000-0000-0000-0000-000000000003"),
+                            Position = "Старший оперуполномоченный",
+                            ProlongationAlertMonths = 1,
+                            ProlongationForYears = 1,
+                            ProlongationWarningMonths = 3,
+                            ValidTo = new DateOnly(2026, 9, 15)
+                        },
+                        new
+                        {
+                            Id = -1004L,
+                            Active = true,
+                            ContractDate = new DateOnly(2023, 8, 1),
+                            Department = "Отдел уголовного розыска",
+                            Division = "Департамент криминальной полиции",
+                            EmployeeId = new Guid("c0000000-0000-0000-0000-000000000004"),
+                            Position = "Оперуполномоченный",
+                            ProlongationAlertMonths = 1,
+                            ProlongationForYears = 1,
+                            ProlongationWarningMonths = 3,
+                            ValidTo = new DateOnly(2026, 8, 1)
+                        },
+                        new
+                        {
+                            Id = -1005L,
+                            Active = true,
+                            ContractDate = new DateOnly(2024, 7, 5),
+                            Department = "Отдел криминального анализа",
+                            Division = "Департамент криминальной полиции",
+                            EmployeeId = new Guid("c0000000-0000-0000-0000-000000000005"),
+                            Position = "Криминальный аналитик",
+                            ProlongationAlertMonths = 1,
+                            ProlongationForYears = 1,
+                            ProlongationWarningMonths = 3,
+                            ValidTo = new DateOnly(2027, 7, 5)
+                        },
+                        new
+                        {
+                            Id = -1006L,
+                            Active = false,
+                            ContractDate = new DateOnly(2022, 1, 10),
+                            Department = "Отдел уголовного розыска",
+                            Division = "Департамент криминальной полиции",
+                            EmployeeId = new Guid("c0000000-0000-0000-0000-000000000006"),
+                            Position = "Оперуполномоченный",
+                            ProlongationAlertMonths = 1,
+                            ProlongationForYears = 1,
+                            ProlongationWarningMonths = 3,
+                            ValidTo = new DateOnly(2025, 12, 31)
+                        });
                 });
 
             modelBuilder.Entity("Certifications.Domain.Entities.Employee", b =>
@@ -164,6 +250,75 @@ namespace Certifications.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_employees_preferred_admin_mode_value", "preferred_admin_mode IS NULL OR preferred_admin_mode IN ('MyPage', 'Administration')");
                         });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("c0000000-0000-0000-0000-000000000001"),
+                            EncryptedPassword = "seed-data-password-not-provisioned",
+                            FirstName = "Елена",
+                            IsAdmin = true,
+                            LastName = "Волкова",
+                            MiddleName = "Сергеевна",
+                            NormalizedPersonalId = "КП-0001",
+                            PersonalId = "КП-0001",
+                            PreferredAdminMode = "Administration"
+                        },
+                        new
+                        {
+                            Id = new Guid("c0000000-0000-0000-0000-000000000002"),
+                            EncryptedPassword = "seed-data-password-not-provisioned",
+                            FirstName = "Алексей",
+                            IsAdmin = false,
+                            LastName = "Морозов",
+                            MiddleName = "Николаевич",
+                            NormalizedPersonalId = "КП-0002",
+                            PersonalId = "КП-0002"
+                        },
+                        new
+                        {
+                            Id = new Guid("c0000000-0000-0000-0000-000000000003"),
+                            EncryptedPassword = "seed-data-password-not-provisioned",
+                            FirstName = "Мария",
+                            IsAdmin = false,
+                            LastName = "Кузнецова",
+                            MiddleName = "Андреевна",
+                            NormalizedPersonalId = "КП-0003",
+                            PersonalId = "КП-0003"
+                        },
+                        new
+                        {
+                            Id = new Guid("c0000000-0000-0000-0000-000000000004"),
+                            EncryptedPassword = "seed-data-password-not-provisioned",
+                            FirstName = "Дмитрий",
+                            IsAdmin = false,
+                            LastName = "Соколов",
+                            MiddleName = "Олегович",
+                            NormalizedPersonalId = "КП-0004",
+                            PersonalId = "КП-0004"
+                        },
+                        new
+                        {
+                            Id = new Guid("c0000000-0000-0000-0000-000000000005"),
+                            EncryptedPassword = "seed-data-password-not-provisioned",
+                            FirstName = "Ирина",
+                            IsAdmin = false,
+                            LastName = "Лебедева",
+                            MiddleName = "Павловна",
+                            NormalizedPersonalId = "КП-0005",
+                            PersonalId = "КП-0005"
+                        },
+                        new
+                        {
+                            Id = new Guid("c0000000-0000-0000-0000-000000000006"),
+                            EncryptedPassword = "seed-data-password-not-provisioned",
+                            FirstName = "Николай",
+                            IsAdmin = false,
+                            LastName = "Фёдоров",
+                            MiddleName = "Евгеньевич",
+                            NormalizedPersonalId = "КП-0006",
+                            PersonalId = "КП-0006"
+                        });
                 });
 
             modelBuilder.Entity("Certifications.Domain.Entities.Prolongation", b =>
@@ -215,6 +370,25 @@ namespace Certifications.Infrastructure.Persistence.Migrations
                     b.ToTable("prolongations", null, t =>
                         {
                             t.HasCheckConstraint("ck_prolongations_date_sequence", "(protocol_date IS NULL OR protocol_date >= certification_date) AND (prolongation_send IS NULL OR (protocol_date IS NOT NULL AND prolongation_send >= protocol_date)) AND (prolongation_returned IS NULL OR (prolongation_send IS NOT NULL AND prolongation_returned >= prolongation_send))");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = -2001L,
+                            Assessor = "полковник полиции Виктор Петрович Громов",
+                            CertificationDate = new DateOnly(2026, 8, 10),
+                            ContractId = -1004L
+                        },
+                        new
+                        {
+                            Id = -2002L,
+                            Assessor = "полковник полиции Виктор Петрович Громов",
+                            CertificationDate = new DateOnly(2026, 7, 1),
+                            ContractId = -1005L,
+                            ProlongationReturned = new DateOnly(2026, 7, 20),
+                            ProlongationSend = new DateOnly(2026, 7, 10),
+                            ProtocolDate = new DateOnly(2026, 7, 5)
                         });
                 });
 

@@ -11,6 +11,7 @@
     <File Path="AGENTS.md" />
     <File Path="ApiDesign.md" />
     <File Path="compose.yaml" />
+    <File Path="openapi\certifications-v1.json" />
     <File Path="README.md" />
     <File Path="Requirements.md" />
     <File Path="start-docker.sh" />
