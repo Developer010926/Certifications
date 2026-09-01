@@ -8,6 +8,7 @@
   </Folder>
   <Folder Name="/SolutionItems/">
     <File Path=".env" />
+    <File Path=".env.example" />
     <File Path="AGENTS.md" />
     <File Path="ApiDesign.md" />
     <File Path="compose.yaml" />
