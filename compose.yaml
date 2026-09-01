@@ -27,16 +27,47 @@ services:
       Security__ApiKey: ${SECURITY_API_KEY:?Set SECURITY_API_KEY in .env}
       Security__PasswordEncryptionKey: ${PASSWORD_ENCRYPTION_KEY:?Set PASSWORD_ENCRYPTION_KEY in .env}
       Business__TimeZoneId: ${BUSINESS_TIME_ZONE:-Europe/Vienna}
-      Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:4200}
+      Cors__AllowedOrigins__0: "${FRONTEND_ORIGIN:-https://localhost:${FRONTEND_PORT:-4200}}"
+      ReverseProxy__UseForwardedHeaders: "true"
       BootstrapAdmin__PersonalId: ${BOOTSTRAP_ADMIN_PERSONAL_ID:-КП-0001}
       BootstrapAdmin__Password: ${BOOTSTRAP_ADMIN_PASSWORD:?Set BOOTSTRAP_ADMIN_PASSWORD in .env}
     ports:
-      - "${BACKEND_PORT:-5081}:8080"
+      - "127.0.0.1:${BACKEND_PORT:-5081}:8080"
+    volumes:
+      - backend-data-protection-keys:/home/app/.aspnet/DataProtection-Keys
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
     depends_on:
       postgres:
         condition: service_healthy
       migrations:
         condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: frontend/certifications-ui
+      dockerfile: Dockerfile
+    environment:
+      SECURITY_API_KEY: ${SECURITY_API_KEY:?Set SECURITY_API_KEY in .env}
+      FRONTEND_ORIGIN: "${FRONTEND_ORIGIN:-https://localhost:${FRONTEND_PORT:-4200}}"
+    ports:
+      - "${FRONTEND_PORT:-4200}:8443"
+    secrets:
+      - frontend_tls_certificate
+      - frontend_tls_private_key
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-check-certificate -q -O /dev/null https://127.0.0.1:8443/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
   migrations:
     build:
@@ -59,4 +90,11 @@ services:
       - CertificationsDbContext
 
 volumes:
+  backend-data-protection-keys:
   postgres-data:
+
+secrets:
+  frontend_tls_certificate:
+    file: ./frontend/certifications-ui/.certificates/localhost.pem
+  frontend_tls_private_key:
+    file: ./frontend/certifications-ui/.certificates/localhost.key

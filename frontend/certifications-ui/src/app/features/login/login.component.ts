@@ -15,20 +15,20 @@ import { UI_TEXT } from '../../shared/utilities/ui-text';
     <main class="login-page">
       <mat-card appearance="outlined" class="login-card">
         <mat-card-header>
-          <mat-card-title>Certifications</mat-card-title>
-          <mat-card-subtitle>Sign in to continue</mat-card-subtitle>
+          <mat-card-title>Сертификации</mat-card-title>
+          <mat-card-subtitle>Войдите, чтобы продолжить</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
             <mat-form-field appearance="outline">
-              <mat-label>Personal ID</mat-label>
+              <mat-label>Табельный номер</mat-label>
               <input matInput formControlName="personalId" autocomplete="username" />
               @if (form.controls.personalId.invalid && form.controls.personalId.touched) {
-                <mat-error>{{ error(form.controls.personalId, 'Personal ID') }}</mat-error>
+                <mat-error>{{ error(form.controls.personalId, 'Табельный номер') }}</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Password</mat-label>
+              <mat-label>Пароль</mat-label>
               <input
                 matInput
                 formControlName="password"
@@ -40,24 +40,24 @@ import { UI_TEXT } from '../../shared/utilities/ui-text';
                 matSuffix
                 type="button"
                 (click)="showPassword.update((value) => !value)"
-                [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+                [attr.aria-label]="showPassword() ? 'Скрыть пароль' : 'Показать пароль'"
               >
-                {{ showPassword() ? 'Hide' : 'Show' }}
+                {{ showPassword() ? 'Скрыть' : 'Показать' }}
               </button>
               @if (form.controls.password.invalid && form.controls.password.touched) {
-                <mat-error>{{ error(form.controls.password, 'Password') }}</mat-error>
+                <mat-error>{{ error(form.controls.password, 'Пароль') }}</mat-error>
               }
             </mat-form-field>
             @if (loginError()) {
               <p class="form-error" role="alert">{{ loginError() }}</p>
             }
             <button mat-flat-button type="submit" [disabled]="submitting()">
-              {{ submitting() ? 'Signing in…' : 'Sign in' }}
+              {{ submitting() ? 'Вход…' : 'Войти' }}
             </button>
           </form>
         </mat-card-content>
         @if (submitting()) {
-          <mat-progress-bar mode="indeterminate" aria-label="Signing in" />
+          <mat-progress-bar mode="indeterminate" aria-label="Выполняется вход" />
         }
       </mat-card>
     </main>

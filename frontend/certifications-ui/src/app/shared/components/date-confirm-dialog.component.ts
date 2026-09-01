@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatDatepickerIntl } from '@angular/material/datepicker';
+import { createRussianDatepickerIntl } from '../../core/localization/russian-material-intl';
 import { MATERIAL_IMPORTS } from '../material/material-imports';
 import { toDateOnly } from '../utilities/date-only';
 
@@ -15,6 +17,7 @@ export interface DateConfirmDialogData {
 @Component({
   selector: 'app-date-confirm-dialog',
   imports: [ReactiveFormsModule, ...MATERIAL_IMPORTS],
+  providers: [{ provide: MatDatepickerIntl, useFactory: createRussianDatepickerIntl }],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h2 mat-dialog-title>{{ data.title }}</h2>
@@ -25,12 +28,12 @@ export interface DateConfirmDialogData {
         <input matInput [matDatepicker]="picker" [formControl]="date" />
         <mat-datepicker-toggle matIconSuffix [for]="picker" /><mat-datepicker #picker />
         @if (date.invalid && date.touched) {
-          <mat-error>A date is required.</mat-error>
+          <mat-error>Укажите дату.</mat-error>
         }
       </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end"
-      ><button mat-button type="button" (click)="dialogRef.close()">Cancel</button
+      ><button mat-button type="button" (click)="dialogRef.close()">Отмена</button
       ><button mat-flat-button type="button" (click)="confirm()">
         {{ data.confirmLabel }}
       </button></mat-dialog-actions

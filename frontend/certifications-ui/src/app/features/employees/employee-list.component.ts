@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { PageEvent } from '@angular/material/paginator';
+import { MatPaginatorIntl, PageEvent } from '@angular/material/paginator';
 import { Sort } from '@angular/material/sort';
 import { RouterLink } from '@angular/router';
 import {
@@ -29,58 +29,60 @@ import type {
 } from '../../core/api/generated/certificationsApiV1.schemas';
 import { EmployeesService } from '../../core/api/generated/employees/employees.service';
 import { ApiErrorService } from '../../core/error-handling/api-error.service';
+import { createRussianPaginatorIntl } from '../../core/localization/russian-material-intl';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
 import { MATERIAL_IMPORTS } from '../../shared/material/material-imports';
 
 @Component({
   selector: 'app-employee-list',
   imports: [ReactiveFormsModule, RouterLink, StatusBadgeComponent, ...MATERIAL_IMPORTS],
+  providers: [{ provide: MatPaginatorIntl, useFactory: createRussianPaginatorIntl }],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="feature-page">
       <header class="page-header">
         <div>
-          <p class="eyebrow">Administration</p>
-          <h1>Employees</h1>
+          <p class="eyebrow">Администрирование</p>
+          <h1>Сотрудники</h1>
         </div>
-        <a mat-flat-button routerLink="/admin/users/new">Create employee</a>
+        <a mat-flat-button routerLink="/admin/users/new">Создать сотрудника</a>
       </header>
       <mat-card appearance="outlined" class="filter-card"
         ><mat-card-content>
           <form
             [formGroup]="filters"
             class="filter-grid compact-filters"
-            aria-label="Employee filters"
+            aria-label="Фильтры сотрудников"
           >
             <mat-form-field appearance="outline"
-              ><mat-label>Name or Personal ID</mat-label><input matInput formControlName="name"
+              ><mat-label>ФИО или табельный номер</mat-label><input matInput formControlName="name"
             /></mat-form-field>
             <mat-checkbox formControlName="includeInactive"
-              >Include employees without an active contract</mat-checkbox
+              >Показать сотрудников без активного контракта</mat-checkbox
             >
             <button
               mat-button
               type="button"
               (click)="filters.reset({ name: '', includeInactive: false })"
             >
-              Clear filters
+              Очистить фильтры
             </button>
           </form>
         </mat-card-content></mat-card
       >
       <mat-card appearance="outlined" class="table-card">
         @if (loading()) {
-          <mat-progress-bar mode="indeterminate" aria-label="Loading employees" />
+          <mat-progress-bar mode="indeterminate" aria-label="Загрузка сотрудников" />
         }
         @if (errorMessage()) {
           <div class="state-panel" role="alert">
             <p>{{ errorMessage() }}</p>
-            <button mat-button type="button" (click)="reload()">Retry</button>
+            <button mat-button type="button" (click)="reload()">Повторить</button>
           </div>
         } @else if (!loading() && rows().length === 0) {
-          <div class="state-panel"><p>No employees match the filters.</p></div>
+          <div class="state-panel"><p>Сотрудники по заданным фильтрам не найдены.</p></div>
         } @else {
-          <div class="table-scroll" role="region" aria-label="Employee table" tabindex="0">
+          <div class="table-scroll" role="region" aria-label="Таблица сотрудников" tabindex="0">
             <table
               mat-table
               [dataSource]="rows()"
@@ -90,45 +92,47 @@ import { MATERIAL_IMPORTS } from '../../shared/material/material-imports';
               (matSortChange)="sortChanged($event)"
             >
               <ng-container matColumnDef="personalId"
-                ><th mat-header-cell *matHeaderCellDef mat-sort-header="personalId">Personal ID</th>
+                ><th mat-header-cell *matHeaderCellDef mat-sort-header="personalId">
+                  Табельный номер
+                </th>
                 <td mat-cell *matCellDef="let row">{{ row.personalId }}</td></ng-container
               >
               <ng-container matColumnDef="lastName"
-                ><th mat-header-cell *matHeaderCellDef mat-sort-header="name">Last name</th>
+                ><th mat-header-cell *matHeaderCellDef mat-sort-header="name">Фамилия</th>
                 <td mat-cell *matCellDef="let row">{{ row.lastName }}</td></ng-container
               >
               <ng-container matColumnDef="firstName"
-                ><th mat-header-cell *matHeaderCellDef>First name</th>
+                ><th mat-header-cell *matHeaderCellDef>Имя</th>
                 <td mat-cell *matCellDef="let row">{{ row.firstName }}</td></ng-container
               >
               <ng-container matColumnDef="middleName"
-                ><th mat-header-cell *matHeaderCellDef>Middle name</th>
+                ><th mat-header-cell *matHeaderCellDef>Отчество</th>
                 <td mat-cell *matCellDef="let row">{{ row.middleName || '—' }}</td></ng-container
               >
               <ng-container matColumnDef="admin"
-                ><th mat-header-cell *matHeaderCellDef>Administrator</th>
+                ><th mat-header-cell *matHeaderCellDef>Администратор</th>
                 <td mat-cell *matCellDef="let row">
-                  {{ row.isAdmin ? 'Yes' : 'No' }}
+                  {{ row.isAdmin ? 'Да' : 'Нет' }}
                 </td></ng-container
               >
               <ng-container matColumnDef="contract"
-                ><th mat-header-cell *matHeaderCellDef>Active contract</th>
+                ><th mat-header-cell *matHeaderCellDef>Активный контракт</th>
                 <td mat-cell *matCellDef="let row">
                   <span [class.inactive-text]="!row.hasActiveContract">{{
-                    row.hasActiveContract ? 'Active' : 'No active contract'
+                    row.hasActiveContract ? 'Активен' : 'Нет активного контракта'
                   }}</span>
                 </td></ng-container
               >
               <ng-container matColumnDef="status"
-                ><th mat-header-cell *matHeaderCellDef>Status</th>
+                ><th mat-header-cell *matHeaderCellDef>Статус</th>
                 <td mat-cell *matCellDef="let row"><app-status-badge [status]="row.status" /></td
               ></ng-container>
               <ng-container matColumnDef="actions"
                 ><th mat-header-cell *matHeaderCellDef>
-                  <span class="visually-hidden">Actions</span>
+                  <span class="visually-hidden">Действия</span>
                 </th>
                 <td mat-cell *matCellDef="let row">
-                  <a mat-button [routerLink]="['/admin/users', row.employeeId]">Open</a>
+                  <a mat-button [routerLink]="['/admin/users', row.employeeId]">Открыть</a>
                 </td></ng-container
               >
               <tr mat-header-row *matHeaderRowDef="columns"></tr>

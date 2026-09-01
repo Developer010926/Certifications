@@ -20,21 +20,21 @@ import { UI_TEXT } from '../shared/utilities/ui-text';
         (closedStart)="mobileNavigationOpen.set(false)"
       >
         <div class="brand">{{ appTitle }}</div>
-        <mat-nav-list aria-label="Primary navigation">
+        <mat-nav-list aria-label="Основная навигация">
           @if (administrationMode()) {
             <a
               mat-list-item
               routerLink="/admin/certifications"
               routerLinkActive="active-link"
               (click)="closeMobileNav()"
-              >Certifications</a
+              >Сертификации</a
             >
             <a
               mat-list-item
               routerLink="/admin/users"
               routerLinkActive="active-link"
               (click)="closeMobileNav()"
-              >Employees</a
+              >Сотрудники</a
             >
           } @else {
             <a
@@ -42,7 +42,7 @@ import { UI_TEXT } from '../shared/utilities/ui-text';
               routerLink="/me"
               routerLinkActive="active-link"
               (click)="closeMobileNav()"
-              >My page</a
+              >Моя страница</a
             >
           }
         </mat-nav-list>
@@ -55,9 +55,9 @@ import { UI_TEXT } from '../shared/utilities/ui-text';
               mat-button
               type="button"
               (click)="mobileNavigationOpen.set(true)"
-              aria-label="Open navigation"
+              aria-label="Открыть навигацию"
             >
-              Menu
+              Меню
             </button>
           }
           <span class="toolbar-title">{{ appTitle }}</span>
@@ -65,10 +65,10 @@ import { UI_TEXT } from '../shared/utilities/ui-text';
           @if (auth.currentUser(); as user) {
             <span class="current-user">{{ user.displayName }}</span>
             @if (user.isAdmin) {
-              <a mat-button routerLink="/select-mode">Switch mode</a>
+              <a mat-button routerLink="/select-mode">Сменить режим</a>
             }
             <button mat-button type="button" [disabled]="loggingOut()" (click)="logout()">
-              Logout
+              Выйти
             </button>
           }
         </mat-toolbar>

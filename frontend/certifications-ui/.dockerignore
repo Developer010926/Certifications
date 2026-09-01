@@ -1,0 +1,12 @@
+.angular
+.certificates
+.git
+.idea
+.vscode
+coverage
+dist
+node_modules
+__screenshots__
+*.iml
+npm-debug.log*
+

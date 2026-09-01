@@ -9,6 +9,7 @@ using Certifications.Application;
 using Certifications.Infrastructure;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,6 +40,8 @@ var cookieSettings = builder.Configuration
 var corsSettings = builder.Configuration
     .GetSection(CorsSettings.SectionName)
     .Get<CorsSettings>() ?? new CorsSettings();
+var useForwardedHeaders = builder.Configuration.GetValue<bool>(
+    "ReverseProxy:UseForwardedHeaders");
 
 if (string.IsNullOrWhiteSpace(cookieSettings.CookieName)
     || cookieSettings.ExpireMinutes is < 1 or > 1440)
@@ -103,6 +106,20 @@ builder.Services.AddAntiforgery(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
+if (useForwardedHeaders)
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders =
+            ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.ForwardLimit = 1;
+
+        // Compose uses dynamic container addresses. Its backend port is bound to
+        // host loopback, and Nginx overwrites both forwarded headers.
+        options.KnownIPNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+}
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
@@ -132,6 +149,11 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+if (useForwardedHeaders)
+{
+    app.UseForwardedHeaders();
+}
 
 if (app.Environment.IsDevelopment())
 {

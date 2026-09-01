@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
+import { MatDatepickerIntl } from '@angular/material/datepicker';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom, finalize } from 'rxjs';
@@ -14,8 +15,10 @@ import { CertificationsService } from '../../core/api/generated/certifications/c
 import { EmployeesService } from '../../core/api/generated/employees/employees.service';
 import { ApiErrorService } from '../../core/error-handling/api-error.service';
 import { applyValidationErrors } from '../../core/error-handling/api-errors';
+import { createRussianDatepickerIntl } from '../../core/localization/russian-material-intl';
 import { DateConfirmDialogComponent } from '../../shared/components/date-confirm-dialog.component';
 import { MATERIAL_IMPORTS } from '../../shared/material/material-imports';
+import { DateOnlyDisplayPipe } from '../../shared/utilities/date-only-display.pipe';
 import {
   certificationDateOrderValidator,
   fromDateOnly,
@@ -24,50 +27,49 @@ import {
 
 @Component({
   selector: 'app-certification-detail',
-  imports: [ReactiveFormsModule, RouterLink, ...MATERIAL_IMPORTS],
+  imports: [ReactiveFormsModule, RouterLink, DateOnlyDisplayPipe, ...MATERIAL_IMPORTS],
+  providers: [{ provide: MatDatepickerIntl, useFactory: createRussianDatepickerIntl }],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="feature-page narrow-page">
       <header class="page-header">
         <div>
-          <p class="eyebrow">Certifications</p>
-          <h1>Certification details</h1>
+          <p class="eyebrow">Сертификации</p>
+          <h1>Данные сертификации</h1>
         </div>
         @if (employeeId()) {
-          <a mat-button [routerLink]="['/admin/users', employeeId(), 'contract']"
-            >Back to contract</a
-          >
+          <a mat-button [routerLink]="['/admin/users', employeeId(), 'contract']">К контракту</a>
         }
       </header>
       @if (loading()) {
-        <mat-progress-bar mode="indeterminate" aria-label="Loading certification" />
+        <mat-progress-bar mode="indeterminate" aria-label="Загрузка сертификации" />
       } @else if (loadError()) {
         <div class="state-panel" role="alert">
           <p>{{ loadError() }}</p>
-          <button mat-button type="button" (click)="load()">Reload</button>
+          <button mat-button type="button" (click)="load()">Обновить</button>
         </div>
       } @else if (certification(); as item) {
         <mat-card appearance="outlined" class="section-card">
           <mat-card-header
             ><mat-card-title>{{
-              item.isCompleted ? 'Completed certification' : 'Certification in progress'
+              item.isCompleted ? 'Завершённая сертификация' : 'Сертификация в процессе'
             }}</mat-card-title
             ><span class="header-spacer"></span
             ><span class="record-state">{{
-              item.isCompleted ? 'Read-only' : 'Editable'
+              item.isCompleted ? 'Только просмотр' : 'Редактирование'
             }}</span></mat-card-header
           >
           <mat-card-content>
             <form [formGroup]="form" class="form-grid" (ngSubmit)="save()">
               <mat-form-field appearance="outline"
-                ><mat-label>Assessor</mat-label
+                ><mat-label>Экзаменатор</mat-label
                 ><input matInput formControlName="assessor" [readonly]="item.isCompleted" />
                 @if (form.controls.assessor.invalid && form.controls.assessor.touched) {
-                  <mat-error>Assessor is required.</mat-error>
+                  <mat-error>Укажите экзаменатора.</mat-error>
                 }
               </mat-form-field>
               <mat-form-field appearance="outline"
-                ><mat-label>Certification date</mat-label
+                ><mat-label>Дата сертификации</mat-label
                 ><input
                   matInput
                   [matDatepicker]="certPicker"
@@ -78,7 +80,7 @@ import {
                   [disabled]="item.isCompleted" /><mat-datepicker #certPicker
               /></mat-form-field>
               <mat-form-field appearance="outline"
-                ><mat-label>Protocol date</mat-label
+                ><mat-label>Дата протокола</mat-label
                 ><input
                   matInput
                   [matDatepicker]="protocolPicker"
@@ -89,7 +91,7 @@ import {
                   [disabled]="item.isCompleted" /><mat-datepicker #protocolPicker
               /></mat-form-field>
               <mat-form-field appearance="outline"
-                ><mat-label>Prolongation sent</mat-label
+                ><mat-label>Дата отправки документов</mat-label
                 ><input
                   matInput
                   [matDatepicker]="sentPicker"
@@ -103,20 +105,21 @@ import {
             @if (item.prolongationReturned) {
               <div class="details-grid">
                 <div>
-                  <span>Prolongation returned</span><strong>{{ item.prolongationReturned }}</strong>
+                  <span>Дата возврата документов</span
+                  ><strong>{{ item.prolongationReturned | dateOnly }}</strong>
                 </div>
               </div>
             }
             @if (form.hasError('protocolRequired')) {
-              <p class="form-error">Protocol date is required before the sent date.</p>
+              <p class="form-error">Перед датой отправки необходимо указать дату протокола.</p>
             }
             @if (form.hasError('certificationOrder') || form.hasError('protocolOrder')) {
-              <p class="form-error">Certification dates must follow their workflow order.</p>
+              <p class="form-error">Даты сертификации должны соответствовать порядку этапов.</p>
             }
             @if (operationError()) {
               <div class="state-panel compact-state" role="alert">
                 <p>{{ operationError() }}</p>
-                <button mat-button type="button" (click)="load()">Reload server data</button>
+                <button mat-button type="button" (click)="load()">Обновить данные с сервера</button>
               </div>
             }
           </mat-card-content>
@@ -126,12 +129,12 @@ import {
                 mat-stroked-button
                 type="button"
                 [disabled]="busy() || !canReturn()"
-                [matTooltip]="canReturn() ? '' : 'Protocol and sent dates must be saved first'"
+                [matTooltip]="canReturn() ? '' : 'Сначала сохраните дату протокола и дату отправки'"
                 (click)="returnCertification()"
               >
-                Complete / return</button
+                Завершить сертификацию</button
               ><button mat-flat-button type="button" [disabled]="busy()" (click)="save()">
-                {{ busy() ? 'Saving…' : 'Save progress' }}
+                {{ busy() ? 'Сохранение…' : 'Сохранить изменения' }}
               </button></mat-card-actions
             >
           }
@@ -182,22 +185,17 @@ export class CertificationDetailComponent implements OnInit {
     try {
       let employeeId = this.employeeId();
       if (!employeeId) employeeId = await this.resolveEmployeeIdFromOverview();
-      if (!employeeId)
-        throw new Error(
-          'This certification cannot be resolved without employee or current overview context.',
-        );
+      if (!employeeId) throw new Error('Не удалось определить сотрудника для этой сертификации.');
       const employee = await firstValueFrom(this.employees.getEmployee(employeeId));
       const details = employee.currentContract;
-      if (!details)
-        throw new Error('The employee has no current contract containing this certification.');
+      if (!details) throw new Error('У сотрудника нет активного контракта с этой сертификацией.');
       const expectedContractId = Number(this.route.snapshot.queryParamMap.get('contractId') ?? 0);
       if (expectedContractId && details.contract.contractId !== expectedContractId)
-        throw new Error('The contract context no longer matches the current contract.');
+        throw new Error('Контракт был изменён и больше не соответствует открытым данным.');
       const certification = details.certifications.find(
         (item) => item.certificationId === this.certificationId,
       );
-      if (!certification)
-        throw new Error('The certification was not found in the available contract history.');
+      if (!certification) throw new Error('Сертификация не найдена в истории активного контракта.');
       this.employeeId.set(employeeId);
       this.contract.set(details.contract);
       this.certification.set(certification);
@@ -238,7 +236,7 @@ export class CertificationDetailComponent implements OnInit {
       .subscribe({
         next: (updated) => {
           this.certification.set(updated);
-          this.snackBar.open('Certification updated.', undefined, { duration: 2500 });
+          this.snackBar.open('Сертификация обновлена.', undefined, { duration: 2500 });
           void this.load();
         },
         error: (error: unknown) => {
@@ -254,11 +252,10 @@ export class CertificationDetailComponent implements OnInit {
     this.dialog
       .open(DateConfirmDialogComponent, {
         data: {
-          title: 'Complete certification',
-          description:
-            'Returning this certification is irreversible and will update the contract validity on the server.',
-          label: 'Prolongation returned',
-          confirmLabel: 'Complete certification',
+          title: 'Завершение сертификации',
+          description: 'Завершение сертификации необратимо и изменит срок действия контракта.',
+          label: 'Дата возврата документов',
+          confirmLabel: 'Завершить сертификацию',
           initialDate: new Date(),
         },
         restoreFocus: true,
@@ -276,7 +273,7 @@ export class CertificationDetailComponent implements OnInit {
           .pipe(finalize(() => this.busy.set(false)))
           .subscribe({
             next: () => {
-              this.snackBar.open('Certification completed and contract refreshed.', undefined, {
+              this.snackBar.open('Сертификация завершена, срок контракта обновлён.', undefined, {
                 duration: 3000,
               });
               void this.load();

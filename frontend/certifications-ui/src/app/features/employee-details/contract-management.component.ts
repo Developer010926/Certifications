@@ -15,6 +15,7 @@ import { DateConfirmDialogComponent } from '../../shared/components/date-confirm
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
 import { MATERIAL_IMPORTS } from '../../shared/material/material-imports';
 import { createContractForm, toContractRequest } from '../../shared/utilities/contract-form';
+import { DateOnlyDisplayPipe } from '../../shared/utilities/date-only-display.pipe';
 import { UI_TEXT } from '../../shared/utilities/ui-text';
 
 @Component({
@@ -23,6 +24,7 @@ import { UI_TEXT } from '../../shared/utilities/ui-text';
     ReactiveFormsModule,
     RouterLink,
     ContractFormFieldsComponent,
+    DateOnlyDisplayPipe,
     StatusBadgeComponent,
     ...MATERIAL_IMPORTS,
   ],
@@ -31,55 +33,60 @@ import { UI_TEXT } from '../../shared/utilities/ui-text';
     <section class="feature-page">
       <header class="page-header">
         <div>
-          <p class="eyebrow">Employees</p>
-          <h1>Contract management</h1>
+          <p class="eyebrow">Сотрудники</p>
+          <h1>Управление контрактом</h1>
         </div>
-        <a mat-button [routerLink]="['/admin/users', employeeId]">Back to employee</a>
+        <a mat-button [routerLink]="['/admin/users', employeeId]">К сотруднику</a>
       </header>
       @if (loading()) {
-        <mat-progress-bar mode="indeterminate" aria-label="Loading contract" />
+        <mat-progress-bar mode="indeterminate" aria-label="Загрузка контракта" />
       } @else if (errorMessage()) {
         <div class="state-panel" role="alert">
           <p>{{ errorMessage() }}</p>
-          <button mat-button type="button" (click)="load()">Reload</button>
+          <button mat-button type="button" (click)="load()">Обновить</button>
         </div>
       } @else if (employee(); as item) {
         @if (item.currentContract; as details) {
           <mat-card appearance="outlined" class="section-card">
             <mat-card-header
-              ><mat-card-title>Active contract</mat-card-title><span class="header-spacer"></span
+              ><mat-card-title>Активный контракт</mat-card-title><span class="header-spacer"></span
               ><app-status-badge [status]="details.contract.status"
             /></mat-card-header>
             <mat-card-content class="details-grid">
               <div>
-                <span>Position</span><strong>{{ details.contract.position }}</strong>
+                <span>Должность</span><strong>{{ details.contract.position }}</strong>
               </div>
               <div>
-                <span>Department</span><strong>{{ details.contract.department || '—' }}</strong>
+                <span>Подразделение</span><strong>{{ details.contract.department || '—' }}</strong>
               </div>
               <div>
-                <span>Division</span><strong>{{ details.contract.division || '—' }}</strong>
+                <span>Организационная единица</span
+                ><strong>{{ details.contract.division || '—' }}</strong>
               </div>
               <div>
-                <span>Contract date</span><strong>{{ details.contract.contractDate }}</strong>
+                <span>Дата начала контракта</span
+                ><strong>{{ details.contract.contractDate | dateOnly }}</strong>
               </div>
               <div>
-                <span>Valid to</span><strong>{{ details.contract.validTo || '—' }}</strong>
+                <span>Дата окончания</span
+                ><strong>{{
+                  details.contract.validTo ? (details.contract.validTo | dateOnly) : '—'
+                }}</strong>
               </div>
               <div>
-                <span>Effective valid to</span
-                ><strong>{{ details.contract.effectiveValidTo }}</strong>
+                <span>Расчётная дата окончания</span
+                ><strong>{{ details.contract.effectiveValidTo | dateOnly }}</strong>
               </div>
               <div>
-                <span>Warning months</span
+                <span>Период предупреждения (мес.)</span
                 ><strong>{{ details.contract.prolongationWarningMonths }}</strong>
               </div>
               <div>
-                <span>Alert months</span
+                <span>Критический период (мес.)</span
                 ><strong>{{ details.contract.prolongationAlertMonths }}</strong>
               </div>
               <div>
-                <span>Prolongation years</span
+                <span>Срок продления (лет)</span
                 ><strong>{{ details.contract.prolongationForYears }}</strong>
               </div>
             </mat-card-content>
@@ -90,68 +97,72 @@ import { UI_TEXT } from '../../shared/utilities/ui-text';
                 [disabled]="busy()"
                 (click)="closeContract(details.contract.contractId, details.contract.rowVersion)"
               >
-                Close contract
+                Закрыть контракт
               </button></mat-card-actions
             >
           </mat-card>
           <mat-card appearance="outlined" class="section-card">
             <mat-card-header
-              ><mat-card-title>Certification history</mat-card-title
+              ><mat-card-title>История сертификаций</mat-card-title
               ><span class="header-spacer"></span
               ><button
                 mat-flat-button
                 type="button"
                 [disabled]="busy() || hasIncomplete()"
-                [matTooltip]="hasIncomplete() ? 'Complete the current certification first' : ''"
+                [matTooltip]="hasIncomplete() ? 'Сначала завершите текущую сертификацию' : ''"
                 (click)="createCertification(details.contract.contractId)"
               >
-                Add certification
+                Добавить сертификацию
               </button></mat-card-header
             >
             <mat-card-content>
               @if (details.certifications.length === 0) {
-                <p class="empty-text">No certifications recorded.</p>
+                <p class="empty-text">Сертификации отсутствуют.</p>
               } @else {
                 <div
                   class="table-scroll"
                   role="region"
-                  aria-label="Certification history"
+                  aria-label="История сертификаций"
                   tabindex="0"
                 >
                   <table mat-table [dataSource]="details.certifications">
                     <ng-container matColumnDef="date"
-                      ><th mat-header-cell *matHeaderCellDef>Date</th>
+                      ><th mat-header-cell *matHeaderCellDef>Дата сертификации</th>
                       <td mat-cell *matCellDef="let row">
-                        {{ row.certificationDate }}
+                        {{ row.certificationDate | dateOnly }}
                       </td></ng-container
                     ><ng-container matColumnDef="assessor"
-                      ><th mat-header-cell *matHeaderCellDef>Assessor</th>
+                      ><th mat-header-cell *matHeaderCellDef>Экзаменатор</th>
                       <td mat-cell *matCellDef="let row">{{ row.assessor }}</td></ng-container
                     ><ng-container matColumnDef="protocol"
-                      ><th mat-header-cell *matHeaderCellDef>Protocol</th>
+                      ><th mat-header-cell *matHeaderCellDef>Дата протокола</th>
                       <td mat-cell *matCellDef="let row">
-                        {{ row.protocolDate || '—' }}
+                        {{ row.protocolDate ? (row.protocolDate | dateOnly) : '—' }}
                       </td></ng-container
                     ><ng-container matColumnDef="sent"
-                      ><th mat-header-cell *matHeaderCellDef>Sent</th>
+                      ><th mat-header-cell *matHeaderCellDef>Дата отправки</th>
                       <td mat-cell *matCellDef="let row">
-                        {{ row.prolongationSend || '—' }}
+                        {{ row.prolongationSend ? (row.prolongationSend | dateOnly) : '—' }}
                       </td></ng-container
                     ><ng-container matColumnDef="returned"
-                      ><th mat-header-cell *matHeaderCellDef>Returned</th>
+                      ><th mat-header-cell *matHeaderCellDef>Дата возврата</th>
                       <td mat-cell *matCellDef="let row">
-                        {{ row.prolongationReturned || 'In progress' }}
+                        {{
+                          row.prolongationReturned
+                            ? (row.prolongationReturned | dateOnly)
+                            : 'В процессе'
+                        }}
                       </td></ng-container
                     ><ng-container matColumnDef="actions"
                       ><th mat-header-cell *matHeaderCellDef>
-                        <span class="visually-hidden">Actions</span>
+                        <span class="visually-hidden">Действия</span>
                       </th>
                       <td mat-cell *matCellDef="let row">
                         <a
                           mat-button
                           [routerLink]="['/admin/certifications', row.certificationId]"
                           [queryParams]="{ employeeId, contractId: details.contract.contractId }"
-                          >{{ row.isCompleted ? 'View' : 'Edit' }}</a
+                          >{{ row.isCompleted ? 'Просмотреть' : 'Редактировать' }}</a
                         >
                       </td></ng-container
                     >
@@ -165,7 +176,7 @@ import { UI_TEXT } from '../../shared/utilities/ui-text';
         } @else {
           <mat-card appearance="outlined" class="section-card">
             <mat-card-header
-              ><mat-card-title>Create active contract</mat-card-title></mat-card-header
+              ><mat-card-title>Создание активного контракта</mat-card-title></mat-card-header
             >
             <mat-card-content
               ><app-contract-form-fields [form]="contractForm" />
@@ -175,7 +186,7 @@ import { UI_TEXT } from '../../shared/utilities/ui-text';
             </mat-card-content>
             <mat-card-actions align="end"
               ><button mat-flat-button type="button" [disabled]="busy()" (click)="createContract()">
-                {{ busy() ? 'Creating…' : 'Create contract' }}
+                {{ busy() ? 'Создание…' : 'Создать контракт' }}
               </button></mat-card-actions
             >
           </mat-card>
@@ -228,7 +239,7 @@ export class ContractManagementComponent implements OnInit {
       .pipe(finalize(() => this.busy.set(false)))
       .subscribe({
         next: () => {
-          this.snackBar.open('Contract created.', undefined, { duration: 2500 });
+          this.snackBar.open('Контракт создан.', undefined, { duration: 2500 });
           this.load();
         },
         error: (error: unknown) => {
@@ -241,11 +252,11 @@ export class ContractManagementComponent implements OnInit {
     this.dialog
       .open(DateConfirmDialogComponent, {
         data: {
-          title: 'Close contract',
+          title: 'Закрытие контракта',
           description:
-            'Closing the contract is irreversible and will prevent the employee from signing in until a new contract exists.',
-          label: 'Closing date',
-          confirmLabel: 'Close contract',
+            'Закрытие контракта необратимо. Сотрудник не сможет войти в систему, пока не будет создан новый контракт.',
+          label: 'Дата закрытия',
+          confirmLabel: 'Закрыть контракт',
           initialDate: new Date(),
         },
         restoreFocus: true,
@@ -260,7 +271,7 @@ export class ContractManagementComponent implements OnInit {
           .pipe(finalize(() => this.busy.set(false)))
           .subscribe({
             next: () => {
-              this.snackBar.open('Contract closed.', undefined, { duration: 2500 });
+              this.snackBar.open('Контракт закрыт.', undefined, { duration: 2500 });
               this.load();
             },
             error: (error) => {
@@ -276,7 +287,7 @@ export class ContractManagementComponent implements OnInit {
       .afterClosed()
       .subscribe((result) => {
         if (result) {
-          this.snackBar.open('Certification created.', undefined, { duration: 2500 });
+          this.snackBar.open('Сертификация создана.', undefined, { duration: 2500 });
           this.load();
         }
       });

@@ -19,7 +19,7 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    title: 'Login | Certifications',
+    title: 'Вход | Сертификации',
     canActivate: [anonymousOnlyGuard],
     loadComponent: () =>
       import('./features/login/login.component').then((module) => module.LoginComponent),
@@ -32,7 +32,7 @@ export const routes: Routes = [
     children: [
       {
         path: 'select-mode',
-        title: 'Select mode | Certifications',
+        title: 'Выбор режима | Сертификации',
         canActivate: [adminGuard],
         loadComponent: () =>
           import('./features/mode-selection/mode-selection.component').then(
@@ -41,13 +41,13 @@ export const routes: Routes = [
       },
       {
         path: 'me',
-        title: 'My page | Certifications',
+        title: 'Моя страница | Сертификации',
         loadComponent: () =>
           import('./features/my-page/my-page.component').then((module) => module.MyPageComponent),
       },
       {
         path: 'admin/certifications',
-        title: 'Certification overview | Certifications',
+        title: 'Обзор сертификаций | Сертификации',
         canActivate: [adminGuard],
         loadComponent: () =>
           import('./features/certifications/certification-overview.component').then(
@@ -56,7 +56,7 @@ export const routes: Routes = [
       },
       {
         path: 'admin/certifications/:certificationId',
-        title: 'Certification | Certifications',
+        title: 'Сертификация | Сертификации',
         canActivate: [adminGuard],
         loadComponent: () =>
           import('./features/certification-form/certification-detail.component').then(
@@ -65,7 +65,7 @@ export const routes: Routes = [
       },
       {
         path: 'admin/users',
-        title: 'Employees | Certifications',
+        title: 'Сотрудники | Сертификации',
         canActivate: [adminGuard],
         loadComponent: () =>
           import('./features/employees/employee-list.component').then(
@@ -74,7 +74,7 @@ export const routes: Routes = [
       },
       {
         path: 'admin/users/new',
-        title: 'Create employee | Certifications',
+        title: 'Создание сотрудника | Сертификации',
         canActivate: [adminGuard],
         loadComponent: () =>
           import('./features/employee-create/employee-create.component').then(
@@ -83,7 +83,7 @@ export const routes: Routes = [
       },
       {
         path: 'admin/users/:employeeId/contract',
-        title: 'Contract | Certifications',
+        title: 'Контракт | Сертификации',
         canActivate: [adminGuard],
         loadComponent: () =>
           import('./features/employee-details/contract-management.component').then(
@@ -92,7 +92,7 @@ export const routes: Routes = [
       },
       {
         path: 'admin/users/:employeeId',
-        title: 'Employee details | Certifications',
+        title: 'Сотрудник | Сертификации',
         canActivate: [adminGuard],
         loadComponent: () =>
           import('./features/employee-details/employee-details.component').then(
@@ -103,7 +103,7 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    title: 'Page not found | Certifications',
+    title: 'Страница не найдена | Сертификации',
     loadComponent: () =>
       import('./features/not-found/not-found.component').then((module) => module.NotFoundComponent),
   },

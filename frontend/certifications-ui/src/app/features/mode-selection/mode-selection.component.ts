@@ -14,11 +14,11 @@ import { MATERIAL_IMPORTS } from '../../shared/material/material-imports';
     <section class="feature-page narrow-page">
       <header class="page-header">
         <div>
-          <p class="eyebrow">Welcome</p>
-          <h1>Select application mode</h1>
+          <p class="eyebrow">Добро пожаловать</p>
+          <h1>Выберите режим работы</h1>
         </div>
       </header>
-      <p>Choose where you want to work. Your selection will be saved for next time.</p>
+      <p>Выберите раздел приложения. Ваш выбор будет сохранён для следующего входа.</p>
       <div class="mode-grid">
         <button
           type="button"
@@ -27,10 +27,10 @@ import { MATERIAL_IMPORTS } from '../../shared/material/material-imports';
           [disabled]="saving()"
           (click)="select(modes.MyPage)"
         >
-          <strong>My page</strong
-          ><span>View your personal information, contract and certification history.</span>
+          <strong>Моя страница</strong
+          ><span>Просмотр личных данных, контракта и истории сертификаций.</span>
           @if (savedMode() === modes.MyPage) {
-            <small>Saved preference</small>
+            <small>Сохранённый выбор</small>
           }
         </button>
         <button
@@ -40,15 +40,15 @@ import { MATERIAL_IMPORTS } from '../../shared/material/material-imports';
           [disabled]="saving()"
           (click)="select(modes.Administration)"
         >
-          <strong>Application administration</strong
-          ><span>Manage employees, contracts and certifications.</span>
+          <strong>Администрирование приложения</strong
+          ><span>Управление сотрудниками, контрактами и сертификациями.</span>
           @if (savedMode() === modes.Administration) {
-            <small>Saved preference</small>
+            <small>Сохранённый выбор</small>
           }
         </button>
       </div>
       @if (saving()) {
-        <mat-progress-bar mode="indeterminate" aria-label="Saving selected mode" />
+        <mat-progress-bar mode="indeterminate" aria-label="Сохранение выбранного режима" />
       }
       @if (saveError()) {
         <p class="form-error" role="alert">{{ saveError() }}</p>

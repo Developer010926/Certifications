@@ -34,41 +34,41 @@ export function buildCreateEmployeeForm() {
     <section class="feature-page narrow-page">
       <header class="page-header">
         <div>
-          <p class="eyebrow">Employees</p>
-          <h1>Create employee and first contract</h1>
+          <p class="eyebrow">Сотрудники</p>
+          <h1>Создание сотрудника и первого контракта</h1>
         </div>
-        <a mat-button routerLink="/admin/users">Cancel</a>
+        <a mat-button routerLink="/admin/users">Отмена</a>
       </header>
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <mat-card appearance="outlined" class="section-card">
-          <mat-card-header><mat-card-title>Employee</mat-card-title></mat-card-header>
+          <mat-card-header><mat-card-title>Сотрудник</mat-card-title></mat-card-header>
           <mat-card-content class="form-grid">
             <mat-form-field appearance="outline"
-              ><mat-label>Personal ID</mat-label><input matInput formControlName="personalId" />
+              ><mat-label>Табельный номер</mat-label><input matInput formControlName="personalId" />
               @if (form.controls.personalId.invalid && form.controls.personalId.touched) {
-                <mat-error>{{ error(form.controls.personalId, 'Personal ID') }}</mat-error>
+                <mat-error>{{ error(form.controls.personalId, 'Табельный номер') }}</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline"
-              ><mat-label>First name</mat-label><input matInput formControlName="firstName" />
+              ><mat-label>Имя</mat-label><input matInput formControlName="firstName" />
               @if (form.controls.firstName.invalid && form.controls.firstName.touched) {
-                <mat-error>{{ error(form.controls.firstName, 'First name') }}</mat-error>
+                <mat-error>{{ error(form.controls.firstName, 'Имя') }}</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline"
-              ><mat-label>Middle name</mat-label><input matInput formControlName="middleName"
+              ><mat-label>Отчество</mat-label><input matInput formControlName="middleName"
             /></mat-form-field>
             <mat-form-field appearance="outline"
-              ><mat-label>Last name</mat-label><input matInput formControlName="lastName" />
+              ><mat-label>Фамилия</mat-label><input matInput formControlName="lastName" />
               @if (form.controls.lastName.invalid && form.controls.lastName.touched) {
-                <mat-error>{{ error(form.controls.lastName, 'Last name') }}</mat-error>
+                <mat-error>{{ error(form.controls.lastName, 'Фамилия') }}</mat-error>
               }
             </mat-form-field>
-            <mat-checkbox formControlName="isAdmin">Administrator</mat-checkbox>
+            <mat-checkbox formControlName="isAdmin">Администратор</mat-checkbox>
           </mat-card-content>
         </mat-card>
         <mat-card appearance="outlined" class="section-card">
-          <mat-card-header><mat-card-title>First contract</mat-card-title></mat-card-header>
+          <mat-card-header><mat-card-title>Первый контракт</mat-card-title></mat-card-header>
           <mat-card-content><app-contract-form-fields [form]="contractForm" /></mat-card-content>
         </mat-card>
         @if (submitError()) {
@@ -76,7 +76,7 @@ export function buildCreateEmployeeForm() {
         }
         <div class="form-actions">
           <button mat-flat-button type="submit" [disabled]="submitting()">
-            {{ submitting() ? 'Creating…' : 'Create employee' }}
+            {{ submitting() ? 'Создание…' : 'Создать сотрудника' }}
           </button>
         </div>
       </form>
@@ -118,9 +118,9 @@ export class EmployeeCreateComponent {
         next: (response) => {
           const employeeId = response.employee.employeeId;
           const data = {
-            title: 'Generated password',
+            title: 'Сгенерированный пароль',
             description:
-              'This password is shown once after creation. Copy it securely before closing.',
+              'Пароль показывается один раз после создания. Скопируйте его в безопасное место перед закрытием окна.',
             password: response.generatedPassword,
           };
           response.generatedPassword = '';
