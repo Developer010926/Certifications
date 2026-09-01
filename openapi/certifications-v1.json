@@ -16,7 +16,11 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/LoginRequest"
+                  }
+                ]
               }
             }
           },
@@ -164,7 +168,11 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PreferredModeRequest"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PreferredModeRequest"
+                  }
+                ]
               }
             }
           },
@@ -341,7 +349,11 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateCertificationRequest"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateCertificationRequest"
+                  }
+                ]
               }
             }
           },
@@ -419,7 +431,11 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateCertificationRequest"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/UpdateCertificationRequest"
+                  }
+                ]
               }
             }
           },
@@ -497,7 +513,11 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReturnCertificationRequest"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ReturnCertificationRequest"
+                  }
+                ]
               }
             }
           },
@@ -597,7 +617,20 @@
             "name": "status",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/CertificationStatus"
+              "enum": [
+                "NotApplicable",
+                "ContractValid",
+                "CertificationPending",
+                "CertificationInProgress",
+                "CertificationMissing"
+              ],
+              "type": "string",
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/CertificationStatus"
+                }
+              ],
+              "nullable": true
             }
           },
           {
@@ -741,7 +774,11 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateContractRequest"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateContractRequest"
+                  }
+                ]
               }
             }
           },
@@ -819,7 +856,11 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CloseContractRequest"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CloseContractRequest"
+                  }
+                ]
               }
             }
           },
@@ -992,7 +1033,11 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateEmployeeRequest"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateEmployeeRequest"
+                  }
+                ]
               }
             }
           },
@@ -1106,7 +1151,11 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateEmployeeRequest"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/UpdateEmployeeRequest"
+                  }
+                ]
               }
             }
           },
@@ -1310,13 +1359,19 @@
     "schemas": {
       "AdminMode": {
         "enum": [
-          0,
-          1
+          "MyPage",
+          "Administration"
         ],
-        "type": "integer",
-        "format": "int32"
+        "type": "string"
       },
       "CertificationDto": {
+        "required": [
+          "assessor",
+          "certificationDate",
+          "certificationId",
+          "contractId",
+          "isCompleted"
+        ],
         "type": "object",
         "properties": {
           "certificationId": {
@@ -1328,8 +1383,7 @@
             "format": "int64"
           },
           "assessor": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "certificationDate": {
             "type": "string",
@@ -1357,6 +1411,14 @@
         "additionalProperties": false
       },
       "CertificationOverviewRowDto": {
+        "required": [
+          "employeeId",
+          "firstName",
+          "isAdmin",
+          "lastName",
+          "personalId",
+          "status"
+        ],
         "type": "object",
         "properties": {
           "employeeId": {
@@ -1364,20 +1426,17 @@
             "format": "uuid"
           },
           "personalId": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "firstName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "middleName": {
             "type": "string",
             "nullable": true
           },
           "lastName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "isAdmin": {
             "type": "boolean"
@@ -1410,23 +1469,45 @@
             "nullable": true
           },
           "status": {
-            "$ref": "#/components/schemas/CertificationStatus"
+            "enum": [
+              "NotApplicable",
+              "ContractValid",
+              "CertificationPending",
+              "CertificationInProgress",
+              "CertificationMissing"
+            ],
+            "type": "string",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CertificationStatus"
+              }
+            ]
           },
           "latestCertification": {
-            "$ref": "#/components/schemas/CertificationDto"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CertificationDto"
+              }
+            ],
+            "nullable": true
           }
         },
         "additionalProperties": false
       },
       "CertificationOverviewRowDtoPagedResult": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
         "type": "object",
         "properties": {
           "items": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CertificationOverviewRowDto"
-            },
-            "nullable": true
+            }
           },
           "page": {
             "type": "integer",
@@ -1445,16 +1526,19 @@
       },
       "CertificationStatus": {
         "enum": [
-          0,
-          1,
-          2,
-          3,
-          4
+          "NotApplicable",
+          "ContractValid",
+          "CertificationPending",
+          "CertificationInProgress",
+          "CertificationMissing"
         ],
-        "type": "integer",
-        "format": "int32"
+        "type": "string"
       },
       "CloseContractRequest": {
+        "required": [
+          "closedOn",
+          "rowVersion"
+        ],
         "type": "object",
         "properties": {
           "closedOn": {
@@ -1469,22 +1553,42 @@
         "additionalProperties": false
       },
       "ContractDetailsDto": {
+        "required": [
+          "certifications",
+          "contract"
+        ],
         "type": "object",
         "properties": {
           "contract": {
-            "$ref": "#/components/schemas/ContractDto"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContractDto"
+              }
+            ]
           },
           "certifications": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CertificationDto"
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": false
       },
       "ContractDto": {
+        "required": [
+          "active",
+          "contractDate",
+          "contractId",
+          "effectiveValidTo",
+          "employeeId",
+          "position",
+          "prolongationAlertMonths",
+          "prolongationForYears",
+          "prolongationWarningMonths",
+          "rowVersion",
+          "status"
+        ],
         "type": "object",
         "properties": {
           "contractId": {
@@ -1496,8 +1600,7 @@
             "format": "uuid"
           },
           "position": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "department": {
             "type": "string",
@@ -1540,17 +1643,32 @@
             "format": "int32"
           },
           "status": {
-            "$ref": "#/components/schemas/CertificationStatus"
+            "enum": [
+              "NotApplicable",
+              "ContractValid",
+              "CertificationPending",
+              "CertificationInProgress",
+              "CertificationMissing"
+            ],
+            "type": "string",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CertificationStatus"
+              }
+            ]
           }
         },
         "additionalProperties": false
       },
       "CreateCertificationRequest": {
+        "required": [
+          "assessor",
+          "certificationDate"
+        ],
         "type": "object",
         "properties": {
           "assessor": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "certificationDate": {
             "type": "string",
@@ -1560,11 +1678,14 @@
         "additionalProperties": false
       },
       "CreateContractRequest": {
+        "required": [
+          "contractDate",
+          "position"
+        ],
         "type": "object",
         "properties": {
           "position": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "department": {
             "type": "string",
@@ -1602,57 +1723,82 @@
         "additionalProperties": false
       },
       "CreateEmployeeRequest": {
+        "required": [
+          "firstContract",
+          "firstName",
+          "isAdmin",
+          "lastName",
+          "personalId"
+        ],
         "type": "object",
         "properties": {
           "personalId": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "firstName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "middleName": {
             "type": "string",
             "nullable": true
           },
           "lastName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "isAdmin": {
             "type": "boolean"
           },
           "firstContract": {
-            "$ref": "#/components/schemas/CreateContractRequest"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreateContractRequest"
+              }
+            ]
           }
         },
         "additionalProperties": false
       },
       "CreateEmployeeResultDto": {
+        "required": [
+          "employee",
+          "generatedPassword"
+        ],
         "type": "object",
         "properties": {
           "employee": {
-            "$ref": "#/components/schemas/EmployeeDetailsDto"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EmployeeDetailsDto"
+              }
+            ]
           },
           "generatedPassword": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false
       },
       "CsrfTokenDto": {
+        "required": [
+          "requestToken"
+        ],
         "type": "object",
         "properties": {
           "requestToken": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false
       },
       "CurrentUserDto": {
+        "required": [
+          "displayName",
+          "employeeId",
+          "firstName",
+          "isAdmin",
+          "lastName",
+          "personalId"
+        ],
         "type": "object",
         "properties": {
           "employeeId": {
@@ -1660,23 +1806,48 @@
             "format": "uuid"
           },
           "personalId": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "middleName": {
             "type": "string",
             "nullable": true
           },
+          "lastName": {
+            "type": "string"
+          },
           "displayName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "isAdmin": {
             "type": "boolean"
           },
           "preferredAdminMode": {
-            "$ref": "#/components/schemas/AdminMode"
+            "enum": [
+              "MyPage",
+              "Administration"
+            ],
+            "type": "string",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminMode"
+              }
+            ],
+            "nullable": true
           }
         },
         "additionalProperties": false
       },
       "EmployeeDetailsDto": {
+        "required": [
+          "employeeId",
+          "firstName",
+          "isAdmin",
+          "lastName",
+          "personalId"
+        ],
         "type": "object",
         "properties": {
           "employeeId": {
@@ -1684,34 +1855,55 @@
             "format": "uuid"
           },
           "personalId": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "firstName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "middleName": {
             "type": "string",
             "nullable": true
           },
           "lastName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "isAdmin": {
             "type": "boolean"
           },
           "preferredAdminMode": {
-            "$ref": "#/components/schemas/AdminMode"
+            "enum": [
+              "MyPage",
+              "Administration"
+            ],
+            "type": "string",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminMode"
+              }
+            ],
+            "nullable": true
           },
           "currentContract": {
-            "$ref": "#/components/schemas/ContractDetailsDto"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContractDetailsDto"
+              }
+            ],
+            "nullable": true
           }
         },
         "additionalProperties": false
       },
       "EmployeeSummaryDto": {
+        "required": [
+          "employeeId",
+          "firstName",
+          "hasActiveContract",
+          "isAdmin",
+          "lastName",
+          "personalId",
+          "status"
+        ],
         "type": "object",
         "properties": {
           "employeeId": {
@@ -1719,20 +1911,17 @@
             "format": "uuid"
           },
           "personalId": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "firstName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "middleName": {
             "type": "string",
             "nullable": true
           },
           "lastName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "isAdmin": {
             "type": "boolean"
@@ -1741,20 +1930,37 @@
             "type": "boolean"
           },
           "status": {
-            "$ref": "#/components/schemas/CertificationStatus"
+            "enum": [
+              "NotApplicable",
+              "ContractValid",
+              "CertificationPending",
+              "CertificationInProgress",
+              "CertificationMissing"
+            ],
+            "type": "string",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CertificationStatus"
+              }
+            ]
           }
         },
         "additionalProperties": false
       },
       "EmployeeSummaryDtoPagedResult": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
         "type": "object",
         "properties": {
           "items": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/EmployeeSummaryDto"
-            },
-            "nullable": true
+            }
           },
           "page": {
             "type": "integer",
@@ -1772,6 +1978,9 @@
         "additionalProperties": false
       },
       "HttpValidationProblemDetails": {
+        "required": [
+          "errors"
+        ],
         "type": "object",
         "properties": {
           "type": {
@@ -1802,41 +2011,56 @@
               "items": {
                 "type": "string"
               }
-            },
-            "nullable": true
+            }
           }
         },
         "additionalProperties": { }
       },
       "LoginRequest": {
+        "required": [
+          "password",
+          "personalId"
+        ],
         "type": "object",
         "properties": {
           "personalId": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "password": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false
       },
       "PasswordDto": {
+        "required": [
+          "password"
+        ],
         "type": "object",
         "properties": {
           "password": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "additionalProperties": false
       },
       "PreferredModeRequest": {
+        "required": [
+          "preferredMode"
+        ],
         "type": "object",
         "properties": {
           "preferredMode": {
-            "$ref": "#/components/schemas/AdminMode"
+            "enum": [
+              "MyPage",
+              "Administration"
+            ],
+            "type": "string",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminMode"
+              }
+            ]
           }
         },
         "additionalProperties": false
@@ -1869,6 +2093,10 @@
         "additionalProperties": { }
       },
       "ReturnCertificationRequest": {
+        "required": [
+          "prolongationReturned",
+          "rowVersion"
+        ],
         "type": "object",
         "properties": {
           "prolongationReturned": {
@@ -1883,23 +2111,38 @@
         "additionalProperties": false
       },
       "ReturnCertificationResultDto": {
+        "required": [
+          "certification",
+          "contract"
+        ],
         "type": "object",
         "properties": {
           "certification": {
-            "$ref": "#/components/schemas/CertificationDto"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CertificationDto"
+              }
+            ]
           },
           "contract": {
-            "$ref": "#/components/schemas/ContractDto"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContractDto"
+              }
+            ]
           }
         },
         "additionalProperties": false
       },
       "UpdateCertificationRequest": {
+        "required": [
+          "assessor",
+          "certificationDate"
+        ],
         "type": "object",
         "properties": {
           "assessor": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "certificationDate": {
             "type": "string",
@@ -1919,23 +2162,26 @@
         "additionalProperties": false
       },
       "UpdateEmployeeRequest": {
+        "required": [
+          "firstName",
+          "isAdmin",
+          "lastName",
+          "personalId"
+        ],
         "type": "object",
         "properties": {
           "personalId": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "firstName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "middleName": {
             "type": "string",
             "nullable": true
           },
           "lastName": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "isAdmin": {
             "type": "boolean"

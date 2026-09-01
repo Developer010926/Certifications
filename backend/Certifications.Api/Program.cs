@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Certifications.Api.Configuration;
 using Certifications.Api.Endpoints;
 using Certifications.Api.Errors;
+using Certifications.Api.OpenApi;
 using Certifications.Api.Security;
 using Certifications.Application;
 using Certifications.Infrastructure;
@@ -118,12 +119,16 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+    options.SupportNonNullableReferenceTypes();
+    options.NonNullableReferenceTypesAsRequired();
+    options.UseAllOfToExtendReferenceSchemas();
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Certifications.Api | v1",
         Version = "1.0.0"
     });
     options.DocumentFilter<ApiSecurityDocumentFilter>();
+    options.SchemaFilter<StringEnumSchemaFilter>();
 });
 
 var app = builder.Build();

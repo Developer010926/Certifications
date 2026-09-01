@@ -11,6 +11,9 @@ internal static class DtoMapper
         return new CurrentUserDto(
             employee.Id,
             employee.PersonalId,
+            employee.FirstName,
+            employee.MiddleName,
+            employee.LastName,
             BuildDisplayName(employee),
             employee.IsAdmin,
             employee.PreferredAdminMode);

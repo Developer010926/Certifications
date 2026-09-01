@@ -3,8 +3,15 @@ approval_policy = "on-request"
 sandbox_mode = "workspace-write"
 web_search = "cached"
 
+[sandbox_workspace_write]
+# WebStorm opens the nested Angular application, while Codex needs the full
+# product repository for requirements, domain models, API design, and backend
+# contract context.
+writable_roots = [
+    "/Users/plavinski/Documents/Development/Certifications",
+]
+
 [shell_environment_policy]
 # Preserve Codex's automatic filtering for variables containing KEY, SECRET,
 # or TOKEN so application secrets are not forwarded to commands by default.
 ignore_default_excludes = false
-

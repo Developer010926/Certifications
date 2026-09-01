@@ -41,12 +41,60 @@ public sealed class RestApiTests(ApiFixture fixture)
         var schemes = root
             .GetProperty("components")
             .GetProperty("securitySchemes");
+        var schemas = root
+            .GetProperty("components")
+            .GetProperty("schemas");
         Assert.True(schemes.TryGetProperty("ApiKey", out _));
         Assert.True(schemes.TryGetProperty("CookieAuth", out _));
 
         var globalSecurity = root.GetProperty("security")[0];
         Assert.True(globalSecurity.TryGetProperty("ApiKey", out _));
         Assert.False(globalSecurity.TryGetProperty("CookieAuth", out _));
+
+        AssertStringEnumSchema(
+            root,
+            nameof(AdminMode),
+            nameof(AdminMode.MyPage),
+            nameof(AdminMode.Administration));
+        AssertStringEnumSchema(
+            root,
+            nameof(CertificationStatus),
+            nameof(CertificationStatus.NotApplicable),
+            nameof(CertificationStatus.ContractValid),
+            nameof(CertificationStatus.CertificationPending),
+            nameof(CertificationStatus.CertificationInProgress),
+            nameof(CertificationStatus.CertificationMissing));
+
+        AssertRequiredAndNullableMetadata(schemas);
+        AssertRequiredProperties(
+            schemas,
+            nameof(CurrentUserDto),
+            "employeeId",
+            "personalId",
+            "firstName",
+            "lastName",
+            "displayName",
+            "isAdmin");
+        AssertRequiredProperties(
+            schemas,
+            nameof(CreateContractRequest),
+            "position",
+            "contractDate");
+        AssertRequiredProperties(
+            schemas,
+            nameof(ContractDetailsDto),
+            "contract",
+            "certifications");
+        AssertNullableReferenceProperty(
+            schemas,
+            nameof(CurrentUserDto),
+            "preferredAdminMode",
+            nameof(AdminMode));
+        AssertNullableReferenceProperty(
+            schemas,
+            nameof(EmployeeDetailsDto),
+            "currentContract",
+            nameof(ContractDetailsDto));
 
         var paths = root.GetProperty("paths");
         var login = paths
@@ -77,6 +125,31 @@ public sealed class RestApiTests(ApiFixture fixture)
     }
 
     [Fact]
+    public async Task CurrentUserResponses_IncludeStructuredNames()
+    {
+        using var client = fixture.CreateClient();
+
+        using var loginResponse = await client.PostAsJsonAsync(
+            "/api/v1/auth/login",
+            new LoginRequest("КП-0001", ApiFixture.BootstrapPassword),
+            JsonOptions);
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
+        AssertNoStore(loginResponse);
+        var loginUser = await ReadAsync<CurrentUserDto>(loginResponse);
+
+        Assert.Equal("Елена", loginUser.FirstName);
+        Assert.Equal("Сергеевна", loginUser.MiddleName);
+        Assert.Equal("Волкова", loginUser.LastName);
+        Assert.Equal("Елена Сергеевна Волкова", loginUser.DisplayName);
+
+        using var currentUserResponse = await client.GetAsync("/api/v1/auth/me");
+        Assert.Equal(HttpStatusCode.OK, currentUserResponse.StatusCode);
+        var currentUser = await ReadAsync<CurrentUserDto>(currentUserResponse);
+
+        Assert.Equal(loginUser, currentUser);
+    }
+
+    [Fact]
     public async Task EmployeeAndCertificationWorkflow_EnforcesSecurityAndBusinessRules()
     {
         using var admin = fixture.CreateClient();
@@ -91,6 +164,16 @@ public sealed class RestApiTests(ApiFixture fixture)
         }
 
         var adminCsrf = await GetCsrfAsync(admin);
+        using (var preferredMode = await SendCommandAsync(
+                   admin,
+                   HttpMethod.Put,
+                   "/api/v1/auth/preferred-mode",
+                   new { PreferredMode = nameof(AdminMode.Administration) },
+                   adminCsrf))
+        {
+            Assert.Equal(HttpStatusCode.NoContent, preferredMode.StatusCode);
+        }
+
         var createRequest = CreateEmployee("  кп-9001 ");
         using var createResponse = await SendCommandAsync(
             admin,
@@ -197,6 +280,15 @@ public sealed class RestApiTests(ApiFixture fixture)
             "/api/v1/certifications/overview?name=9001&sort=effectiveValidTo&direction=asc");
         var overviewJson = await overviewResponse.Content.ReadAsStringAsync();
         Assert.True(overviewResponse.IsSuccessStatusCode, overviewJson);
+        using (var overviewDocument = JsonDocument.Parse(overviewJson))
+        {
+            var status = overviewDocument.RootElement
+                .GetProperty("items")[0]
+                .GetProperty("status");
+            Assert.Equal(JsonValueKind.String, status.ValueKind);
+            Assert.Equal(nameof(CertificationStatus.ContractValid), status.GetString());
+        }
+
         var overview = JsonSerializer.Deserialize<PagedResult<CertificationOverviewRowDto>>(
             overviewJson,
             JsonOptions);
@@ -326,4 +418,86 @@ public sealed class RestApiTests(ApiFixture fixture)
 
     private static void AssertNoStore(HttpResponseMessage response) =>
         Assert.Contains("no-store", response.Headers.CacheControl?.ToString() ?? string.Empty);
+
+    private static void AssertStringEnumSchema(
+        JsonElement root,
+        string schemaName,
+        params string[] expectedValues)
+    {
+        var schema = root
+            .GetProperty("components")
+            .GetProperty("schemas")
+            .GetProperty(schemaName);
+
+        Assert.Equal("string", schema.GetProperty("type").GetString());
+        Assert.False(schema.TryGetProperty("format", out _));
+        Assert.Equal(
+            expectedValues,
+            schema.GetProperty("enum")
+                .EnumerateArray()
+                .Select(value => value.GetString())
+                .ToArray());
+    }
+
+    private static void AssertRequiredAndNullableMetadata(JsonElement schemas)
+    {
+        foreach (var schemaProperty in schemas.EnumerateObject())
+        {
+            if (!schemaProperty.Value.TryGetProperty("properties", out var properties)
+                || schemaProperty.Name == "ProblemDetails")
+            {
+                continue;
+            }
+
+            Assert.True(
+                schemaProperty.Value.TryGetProperty("required", out var required),
+                $"Schema '{schemaProperty.Name}' has no required metadata.");
+            var requiredNames = required
+                .EnumerateArray()
+                .Select(value => Assert.IsType<string>(value.GetString()))
+                .ToHashSet(StringComparer.Ordinal);
+            Assert.NotEmpty(requiredNames);
+
+            foreach (var property in properties.EnumerateObject())
+            {
+                var isNullable = property.Value.TryGetProperty("nullable", out var nullable)
+                    && nullable.GetBoolean();
+                Assert.Equal(!isNullable, requiredNames.Contains(property.Name));
+            }
+        }
+    }
+
+    private static void AssertRequiredProperties(
+        JsonElement schemas,
+        string schemaName,
+        params string[] expectedProperties)
+    {
+        var actualProperties = schemas
+            .GetProperty(schemaName)
+            .GetProperty("required")
+            .EnumerateArray()
+            .Select(value => Assert.IsType<string>(value.GetString()))
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.True(
+            actualProperties.SetEquals(expectedProperties),
+            $"Schema '{schemaName}' required [{string.Join(", ", actualProperties)}].");
+    }
+
+    private static void AssertNullableReferenceProperty(
+        JsonElement schemas,
+        string schemaName,
+        string propertyName,
+        string referencedSchemaName)
+    {
+        var property = schemas
+            .GetProperty(schemaName)
+            .GetProperty("properties")
+            .GetProperty(propertyName);
+
+        Assert.True(property.GetProperty("nullable").GetBoolean());
+        Assert.Equal(
+            $"#/components/schemas/{referencedSchemaName}",
+            property.GetProperty("allOf")[0].GetProperty("$ref").GetString());
+    }
 }

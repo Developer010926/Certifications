@@ -11,6 +11,9 @@ public sealed record CsrfTokenDto(string RequestToken);
 public sealed record CurrentUserDto(
     Guid EmployeeId,
     string PersonalId,
+    string FirstName,
+    string? MiddleName,
+    string LastName,
     string DisplayName,
     bool IsAdmin,
     AdminMode? PreferredAdminMode);

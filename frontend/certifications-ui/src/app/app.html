@@ -1,0 +1,7 @@
+@if (auth.state() === 'unknown') {
+  <div class="startup-loading" role="status" aria-label="Restoring session">
+    <span>Loading Certifications…</span>
+    <span class="startup-progress" aria-hidden="true"><span></span></span>
+  </div>
+}
+<router-outlet />

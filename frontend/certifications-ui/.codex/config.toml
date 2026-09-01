@@ -1,0 +1,13 @@
+# Fallback for JetBrains AI Chat when WebStorm treats this Angular application
+# as the Codex project root instead of discovering the parent Git repository.
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[sandbox_workspace_write]
+writable_roots = [
+    "/Users/plavinski/Documents/Development/Certifications",
+]
+
+[shell_environment_policy]
+# Do not forward application secrets to spawned commands by default.
+ignore_default_excludes = false
