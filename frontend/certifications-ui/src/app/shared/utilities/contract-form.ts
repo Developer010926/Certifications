@@ -40,7 +40,7 @@ export function toContractRequest(form: FormGroup): CreateContractRequest {
   };
   const contractDate = toDateOnly(value.contractDate);
   if (!contractDate) {
-    throw new Error('Contract date is required.');
+    throw new Error('Укажите дату начала контракта.');
   }
   return {
     position: value.position.trim(),

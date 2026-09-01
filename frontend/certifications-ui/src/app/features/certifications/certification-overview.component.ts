@@ -9,6 +9,8 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
+import { MatPaginatorIntl } from '@angular/material/paginator';
+import { MatDatepickerIntl } from '@angular/material/datepicker';
 import { Sort } from '@angular/material/sort';
 import { RouterLink } from '@angular/router';
 import {
@@ -29,8 +31,13 @@ import {
 } from '../../core/api/generated/certificationsApiV1.schemas';
 import { CertificationsService } from '../../core/api/generated/certifications/certifications.service';
 import { ApiErrorService } from '../../core/error-handling/api-error.service';
+import {
+  createRussianDatepickerIntl,
+  createRussianPaginatorIntl,
+} from '../../core/localization/russian-material-intl';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
 import { MATERIAL_IMPORTS } from '../../shared/material/material-imports';
+import { DateOnlyDisplayPipe } from '../../shared/utilities/date-only-display.pipe';
 import { dateRangeValidator, toDateOnly } from '../../shared/utilities/date-only';
 
 export interface CertificationFilterValue {
@@ -65,37 +72,47 @@ export function buildCertificationOverviewParams(
 
 @Component({
   selector: 'app-certification-overview',
-  imports: [ReactiveFormsModule, RouterLink, StatusBadgeComponent, ...MATERIAL_IMPORTS],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    DateOnlyDisplayPipe,
+    StatusBadgeComponent,
+    ...MATERIAL_IMPORTS,
+  ],
+  providers: [
+    { provide: MatDatepickerIntl, useFactory: createRussianDatepickerIntl },
+    { provide: MatPaginatorIntl, useFactory: createRussianPaginatorIntl },
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="feature-page">
       <header class="page-header">
         <div>
-          <p class="eyebrow">Administration</p>
-          <h1>Certification overview</h1>
+          <p class="eyebrow">Администрирование</p>
+          <h1>Обзор сертификаций</h1>
         </div>
       </header>
 
       <mat-card appearance="outlined" class="filter-card">
         <mat-card-content>
-          <form [formGroup]="filters" class="filter-grid" aria-label="Certification filters">
+          <form [formGroup]="filters" class="filter-grid" aria-label="Фильтры сертификаций">
             <mat-form-field appearance="outline"
-              ><mat-label>Employee name or ID</mat-label><input matInput formControlName="name"
+              ><mat-label>ФИО или табельный номер</mat-label><input matInput formControlName="name"
             /></mat-form-field>
             <mat-form-field appearance="outline"
-              ><mat-label>Department</mat-label><input matInput formControlName="department"
+              ><mat-label>Подразделение</mat-label><input matInput formControlName="department"
             /></mat-form-field>
             <mat-form-field appearance="outline"
-              ><mat-label>Status</mat-label
+              ><mat-label>Статус</mat-label
               ><mat-select formControlName="status"
-                ><mat-option [value]="null">All statuses</mat-option>
+                ><mat-option [value]="null">Все статусы</mat-option>
                 @for (option of statusOptions; track option.value) {
                   <mat-option [value]="option.value">{{ option.label }}</mat-option>
                 }
               </mat-select></mat-form-field
             >
             <mat-form-field appearance="outline"
-              ><mat-label>Effective valid from</mat-label
+              ><mat-label>Расчётная дата окончания: с</mat-label
               ><input
                 matInput
                 [matDatepicker]="fromPicker"
@@ -104,7 +121,7 @@ export function buildCertificationOverviewParams(
                 [for]="fromPicker" /><mat-datepicker #fromPicker
             /></mat-form-field>
             <mat-form-field appearance="outline"
-              ><mat-label>Effective valid to</mat-label
+              ><mat-label>Расчётная дата окончания: по</mat-label
               ><input
                 matInput
                 [matDatepicker]="toPicker"
@@ -113,32 +130,32 @@ export function buildCertificationOverviewParams(
                 [for]="toPicker" /><mat-datepicker #toPicker
             /></mat-form-field>
             <mat-checkbox formControlName="includeInactive"
-              >Include inactive employees</mat-checkbox
+              >Показать неактивных сотрудников</mat-checkbox
             >
-            <button mat-button type="button" (click)="clearFilters()">Clear filters</button>
+            <button mat-button type="button" (click)="clearFilters()">Очистить фильтры</button>
           </form>
           @if (filters.hasError('dateRange')) {
-            <p class="form-error" role="alert">The start date must not be after the end date.</p>
+            <p class="form-error" role="alert">Начальная дата не может быть позже конечной.</p>
           }
         </mat-card-content>
       </mat-card>
 
       <mat-card appearance="outlined" class="table-card">
         @if (loading()) {
-          <mat-progress-bar mode="indeterminate" aria-label="Loading certification overview" />
+          <mat-progress-bar mode="indeterminate" aria-label="Загрузка обзора сертификаций" />
         }
         @if (errorMessage()) {
           <div class="state-panel" role="alert">
             <p>{{ errorMessage() }}</p>
-            <button mat-button type="button" (click)="reload()">Retry</button>
+            <button mat-button type="button" (click)="reload()">Повторить</button>
           </div>
         } @else if (!loading() && rows().length === 0) {
-          <div class="state-panel"><p>No certification records match the filters.</p></div>
+          <div class="state-panel"><p>Записи по заданным фильтрам не найдены.</p></div>
         } @else {
           <div
             class="table-scroll"
             role="region"
-            aria-label="Certification overview table"
+            aria-label="Таблица обзора сертификаций"
             tabindex="0"
           >
             <table
@@ -150,50 +167,54 @@ export function buildCertificationOverviewParams(
               (matSortChange)="sortChanged($event)"
             >
               <ng-container matColumnDef="personalId"
-                ><th mat-header-cell *matHeaderCellDef>Personal ID</th>
+                ><th mat-header-cell *matHeaderCellDef>Табельный номер</th>
                 <td mat-cell *matCellDef="let row">{{ row.personalId }}</td></ng-container
               >
               <ng-container matColumnDef="lastName"
-                ><th mat-header-cell *matHeaderCellDef mat-sort-header="name">Last name</th>
+                ><th mat-header-cell *matHeaderCellDef mat-sort-header="name">Фамилия</th>
                 <td mat-cell *matCellDef="let row">{{ row.lastName }}</td></ng-container
               >
               <ng-container matColumnDef="firstName"
-                ><th mat-header-cell *matHeaderCellDef>First name</th>
+                ><th mat-header-cell *matHeaderCellDef>Имя</th>
                 <td mat-cell *matCellDef="let row">{{ row.firstName }}</td></ng-container
               >
               <ng-container matColumnDef="middleName"
-                ><th mat-header-cell *matHeaderCellDef>Middle name</th>
+                ><th mat-header-cell *matHeaderCellDef>Отчество</th>
                 <td mat-cell *matCellDef="let row">{{ row.middleName || '—' }}</td></ng-container
               >
               <ng-container matColumnDef="position"
-                ><th mat-header-cell *matHeaderCellDef>Position</th>
+                ><th mat-header-cell *matHeaderCellDef>Должность</th>
                 <td mat-cell *matCellDef="let row">{{ row.position || '—' }}</td></ng-container
               >
               <ng-container matColumnDef="department"
-                ><th mat-header-cell *matHeaderCellDef mat-sort-header="department">Department</th>
+                ><th mat-header-cell *matHeaderCellDef mat-sort-header="department">
+                  Подразделение
+                </th>
                 <td mat-cell *matCellDef="let row">{{ row.department || '—' }}</td></ng-container
               >
               <ng-container matColumnDef="division"
-                ><th mat-header-cell *matHeaderCellDef>Division</th>
+                ><th mat-header-cell *matHeaderCellDef>Организационная единица</th>
                 <td mat-cell *matCellDef="let row">{{ row.division || '—' }}</td></ng-container
               >
               <ng-container matColumnDef="contractDate"
-                ><th mat-header-cell *matHeaderCellDef>Contract date</th>
-                <td mat-cell *matCellDef="let row">{{ row.contractDate || '—' }}</td></ng-container
+                ><th mat-header-cell *matHeaderCellDef>Дата начала контракта</th>
+                <td mat-cell *matCellDef="let row">
+                  {{ row.contractDate ? (row.contractDate | dateOnly) : '—' }}
+                </td></ng-container
               >
               <ng-container matColumnDef="effectiveValidTo"
                 ><th mat-header-cell *matHeaderCellDef mat-sort-header="effectiveValidTo">
-                  Effective valid to
+                  Расчётная дата окончания
                 </th>
                 <td mat-cell *matCellDef="let row">
-                  {{ row.effectiveValidTo || '—' }}
+                  {{ row.effectiveValidTo ? (row.effectiveValidTo | dateOnly) : '—' }}
                 </td></ng-container
               >
               <ng-container matColumnDef="latest"
-                ><th mat-header-cell *matHeaderCellDef>Latest certification</th>
+                ><th mat-header-cell *matHeaderCellDef>Последняя сертификация</th>
                 <td mat-cell *matCellDef="let row">
                   @if (row.latestCertification) {
-                    {{ row.latestCertification.certificationDate }} ·
+                    {{ row.latestCertification.certificationDate | dateOnly }} ·
                     {{ row.latestCertification.assessor }}
                   } @else {
                     —
@@ -201,15 +222,15 @@ export function buildCertificationOverviewParams(
                 </td></ng-container
               >
               <ng-container matColumnDef="status"
-                ><th mat-header-cell *matHeaderCellDef mat-sort-header="status">Status</th>
+                ><th mat-header-cell *matHeaderCellDef mat-sort-header="status">Статус</th>
                 <td mat-cell *matCellDef="let row"><app-status-badge [status]="row.status" /></td
               ></ng-container>
               <ng-container matColumnDef="actions"
                 ><th mat-header-cell *matHeaderCellDef>
-                  <span class="visually-hidden">Actions</span>
+                  <span class="visually-hidden">Действия</span>
                 </th>
                 <td mat-cell *matCellDef="let row">
-                  <a mat-button [routerLink]="['/admin/users', row.employeeId]">Employee</a>
+                  <a mat-button [routerLink]="['/admin/users', row.employeeId]">Сотрудник</a>
                   @if (row.latestCertification && row.contractId) {
                     <a
                       mat-button
@@ -218,7 +239,7 @@ export function buildCertificationOverviewParams(
                         row.latestCertification.certificationId,
                       ]"
                       [queryParams]="{ employeeId: row.employeeId, contractId: row.contractId }"
-                      >Certification</a
+                      >Сертификация</a
                     >
                   }
                 </td></ng-container
@@ -260,14 +281,20 @@ export class CertificationOverviewComponent implements OnInit {
     'actions',
   ];
   readonly statusOptions = [
-    { value: GetCertificationOverviewStatus.ContractValid, label: 'Contract valid' },
-    { value: GetCertificationOverviewStatus.CertificationPending, label: 'Certification pending' },
+    { value: GetCertificationOverviewStatus.ContractValid, label: 'Контракт действителен' },
+    {
+      value: GetCertificationOverviewStatus.CertificationPending,
+      label: 'Ожидается сертификация',
+    },
     {
       value: GetCertificationOverviewStatus.CertificationInProgress,
-      label: 'Certification in progress',
+      label: 'Сертификация в процессе',
     },
-    { value: GetCertificationOverviewStatus.CertificationMissing, label: 'Certification missing' },
-    { value: GetCertificationOverviewStatus.NotApplicable, label: 'Not applicable' },
+    {
+      value: GetCertificationOverviewStatus.CertificationMissing,
+      label: 'Сертификация отсутствует',
+    },
+    { value: GetCertificationOverviewStatus.NotApplicable, label: 'Не применяется' },
   ];
   readonly filters = new FormGroup(
     {

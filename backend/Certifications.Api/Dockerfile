@@ -34,6 +34,9 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 
 WORKDIR /app
 
+RUN mkdir -p /home/app/.aspnet/DataProtection-Keys \
+    && chown -R "$APP_UID:$APP_UID" /home/app/.aspnet
+
 COPY --from=build /app/publish .
 
 EXPOSE 8080

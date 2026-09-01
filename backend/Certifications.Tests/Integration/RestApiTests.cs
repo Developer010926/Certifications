@@ -125,6 +125,43 @@ public sealed class RestApiTests(ApiFixture fixture)
     }
 
     [Fact]
+    public async Task ForwardedHttps_AllowsSecureAntiforgeryCookieBehindReverseProxy()
+    {
+        using var client = fixture.CreateClient(useHttps: false, handleCookies: false);
+        using var loginRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/login")
+        {
+            Content = JsonContent.Create(
+                new LoginRequest("КП-0001", ApiFixture.BootstrapPassword),
+                options: JsonOptions)
+        };
+        AddForwardedHttpsHeaders(loginRequest);
+
+        using var loginResponse = await client.SendAsync(loginRequest);
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
+        var authenticationCookie = Assert.Single(
+            loginResponse.Headers.GetValues("Set-Cookie"));
+        Assert.Contains("secure", authenticationCookie, StringComparison.OrdinalIgnoreCase);
+
+        using var csrfRequest = new HttpRequestMessage(
+            HttpMethod.Get,
+            "/api/v1/auth/csrf-token");
+        AddForwardedHttpsHeaders(csrfRequest);
+        csrfRequest.Headers.TryAddWithoutValidation(
+            "Cookie",
+            authenticationCookie.Split(';', 2)[0]);
+
+        using var csrfResponse = await client.SendAsync(csrfRequest);
+        Assert.Equal(HttpStatusCode.OK, csrfResponse.StatusCode);
+        Assert.NotNull(await csrfResponse.Content.ReadFromJsonAsync<CsrfTokenDto>(JsonOptions));
+        var antiforgeryCookie = csrfResponse.Headers
+            .GetValues("Set-Cookie")
+            .Single(value => value.StartsWith(
+                "Certifications.Antiforgery=",
+                StringComparison.Ordinal));
+        Assert.Contains("secure", antiforgeryCookie, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task CurrentUserResponses_IncludeStructuredNames()
     {
         using var client = fixture.CreateClient();
@@ -385,6 +422,12 @@ public sealed class RestApiTests(ApiFixture fixture)
             JsonOptions);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         AssertNoStore(response);
+    }
+
+    private static void AddForwardedHttpsHeaders(HttpRequestMessage request)
+    {
+        request.Headers.Add("X-Forwarded-For", "127.0.0.1");
+        request.Headers.Add("X-Forwarded-Proto", "https");
     }
 
     private static async Task<string> GetCsrfAsync(HttpClient client)

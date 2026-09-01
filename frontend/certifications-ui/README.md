@@ -1,85 +1,167 @@
 # Certifications UI
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.3.
+Frontend системы управления сотрудниками, контрактами и сертификациями. Приложение реализовано на Angular 21 с Angular Material, standalone components, Reactive Forms и типизированным API client, сгенерированным Orval.
 
-## API client generation
+## Требования к окружению
 
-The typed Angular client is generated with Orval 8.27.0 exclusively from the canonical contract at `../../openapi/certifications-v1.json`. Generated files are isolated under `src/app/core/api/generated` and must not be edited manually.
+- Node.js 24;
+- npm 11;
+- Angular CLI 21 через локальную зависимость проекта;
+- .NET 10 SDK для подготовки доверенного localhost-сертификата;
+- запущенный Certifications API;
+- заполненный корневой файл `.env` с `SECURITY_API_KEY`.
+
+Для полной подготовки системы используйте [общее руководство по началу работы](../../docs/GettingStarted.md).
+
+## Установка зависимостей
+
+Из каталога `frontend/certifications-ui` выполните:
+
+```bash
+npm ci
+```
+
+## Генерация API client
+
+Orval генерирует Angular client из канонического контракта:
+
+```text
+../../openapi/certifications-v1.json
+```
+
+Конфигурация находится в `orval.config.ts`, результат — в `src/app/core/api/generated`. Генерируемые файлы нельзя редактировать вручную.
+
+Однократная генерация:
 
 ```bash
 npm run api:generate
 ```
 
-For contract development, use `npm run api:watch`.
+Отслеживание изменений контракта:
 
-## Local development setup
+```bash
+npm run api:watch
+```
 
-The browser calls relative `/api/v1/*` paths. The Angular development proxy forwards `/api` to `https://localhost:7055` and injects `X-API-Key` outside the browser bundle.
+После изменения backend-контракта сначала пересоберите API, затем повторно запустите генерацию client.
 
-The one local configuration step is to copy the repository-root `.env.example` to `.env` and set `SECURITY_API_KEY` to the same value used by the backend. The `.env` file is ignored by Git.
+## Локальная конфигурация
 
-Trust the ASP.NET Core HTTPS development certificate once:
+Браузер обращается к относительным адресам `/api/v1/*`. Angular dev proxy пересылает `/api` на `https://localhost:7055` и добавляет `X-API-Key` вне browser bundle.
+
+В корне репозитория создайте локальный `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Значение `SECURITY_API_KEY` должно совпадать с ключом API. Файл `.env` игнорируется Git.
+
+Один раз доверьте ASP.NET Core HTTPS-сертификат:
 
 ```bash
 dotnet dev-certs https --trust
 ```
 
-The `npm start` command verifies the certificate trust, exports the certificate and key into the ignored local `.certificates` directory, and serves Angular over HTTPS. The private key is restricted to the current user and is never committed or included in the browser bundle.
+## Запуск для разработки
 
-Angular launches through Node with `--use-system-ca`. On macOS, the proxy also loads the public `localhost` certificates from the user's Keychain because Node does not consistently include trusted ASP.NET leaf certificates in its system CA list. Backend certificate validation remains enabled with `secure: true`.
-
-## Development server
-
-After trusting the certificate, restart the backend and start the local development server with:
+Сначала запустите backend с HTTPS-профилем. Затем из Angular-проекта выполните:
 
 ```bash
 npm start
 ```
 
-Once the server is running, open your browser and navigate to `https://localhost:4200/`. Using HTTPS is required so the backend's `Secure` authentication and antiforgery cookies remain available after login. The application will automatically reload whenever you modify any of the source files.
+Команда `prestart` подготавливает сертификат в игнорируемом каталоге `.certificates`, после чего Angular открывается по адресу:
 
-## Code scaffolding
+[https://localhost:4200](https://localhost:4200)
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+HTTPS необходим для secure authentication и antiforgery cookies. Проверка backend-сертификата в proxy остаётся включённой.
 
-```bash
-ng generate component component-name
-```
+## Сборка и тестирование
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Production build:
 
 ```bash
-ng generate --help
+npm run build
 ```
 
-## Building
-
-To build the project run:
+Unit tests в однократном режиме:
 
 ```bash
-ng build
+npm test -- --watch=false
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Интерактивный режим тестов:
 
 ```bash
-ng test
+npm test
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+Непрерывная development-сборка:
 
 ```bash
-ng e2e
+npm run watch
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+В проекте пока нет отдельного e2e runner и npm-скрипта lint; не используйте `ng e2e` или `npm run lint`, пока они не будут настроены.
 
-## Additional Resources
+## Структура приложения
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```text
+src/app/
+├── core/       # auth, guards, interceptors, error handling, generated API
+├── features/   # login, сотрудники, контракты, сертификации, личная страница
+├── layout/     # оболочка и навигация
+└── shared/     # общие компоненты, формы, статусы и утилиты
+```
+
+Основные маршруты:
+
+```text
+/login
+/select-mode
+/me
+/admin/certifications
+/admin/users
+/admin/users/new
+/admin/users/:employeeId
+/admin/users/:employeeId/contract
+/admin/certifications/:certificationId
+```
+
+Пользовательские сценарии описаны в [руководстве пользователя](../../docs/UserGuide.md), архитектурные решения — в [UiDesign.md](../../UiDesign.md).
+
+## Работа с API и сессией
+
+- Все запросы отправляются с `withCredentials: true`.
+- Содержимое `HttpOnly` cookie недоступно Angular-коду.
+- CSRF token хранится только в памяти и передаётся в `X-CSRF-TOKEN` для изменяющих запросов.
+- API key не хранится в Angular source, environment-файлах или browser storage.
+- Раскрытый пароль существует только в памяти диалога и очищается при его закрытии.
+- Статус контракта и `EffectiveValidTo` вычисляет backend.
+
+## Docker
+
+Production-сборка frontend создаётся в Node-контейнере и обслуживается Nginx по HTTPS. Nginx добавляет API key во время выполнения и проксирует `/api/v1/*` в backend по внутренней Docker-сети.
+
+Запускайте весь стек из корня репозитория:
+
+```bash
+./start-docker.sh
+```
+
+В Windows:
+
+```bat
+start-docker.cmd
+```
+
+## WebStorm
+
+Откройте в WebStorm именно каталог:
+
+```text
+frontend/certifications-ui
+```
+
+WebStorm распознает `angular.json`, `package.json`, TypeScript и Angular Material. Инструкции Codex для этого проекта находятся в `AGENTS.md` и `.codex/config.toml`.

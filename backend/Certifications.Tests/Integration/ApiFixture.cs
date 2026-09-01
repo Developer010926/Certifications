@@ -35,6 +35,9 @@ public sealed class ApiFixture : IAsyncLifetime
         Environment.SetEnvironmentVariable(
             "ConnectionStrings__DefaultConnection",
             database.GetConnectionString());
+        Environment.SetEnvironmentVariable(
+            "ReverseProxy__UseForwardedHeaders",
+            "true");
         factory = new CertificationsApiFactory(database.GetConnectionString());
 
         // Force startup so one-time seed administrator provisioning completes first.
@@ -50,16 +53,21 @@ public sealed class ApiFixture : IAsyncLifetime
         }
 
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", null);
+        Environment.SetEnvironmentVariable("ReverseProxy__UseForwardedHeaders", null);
         await database.DisposeAsync();
     }
 
-    public HttpClient CreateClient(bool includeApiKey = true)
+    public HttpClient CreateClient(
+        bool includeApiKey = true,
+        bool useHttps = true,
+        bool handleCookies = true)
     {
         var client = (factory ?? throw new InvalidOperationException("Fixture is not initialized."))
             .CreateClient(new WebApplicationFactoryClientOptions
             {
                 AllowAutoRedirect = false,
-                BaseAddress = new Uri("https://localhost")
+                BaseAddress = new Uri(useHttps ? "https://localhost" : "http://localhost"),
+                HandleCookies = handleCookies
             });
 
         if (includeApiKey)

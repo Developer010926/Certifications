@@ -19,11 +19,11 @@ export interface PasswordDialogData {
     <h2 mat-dialog-title>{{ data.title }}</h2>
     <mat-dialog-content>
       <p>{{ data.description }}</p>
-      <div class="password" role="status" aria-label="Revealed password">{{ password() }}</div>
+      <div class="password" role="status" aria-label="Показанный пароль">{{ password() }}</div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button type="button" (click)="copy()">Copy password</button>
-      <button mat-flat-button type="button" (click)="close()">Done</button>
+      <button mat-button type="button" (click)="copy()">Скопировать пароль</button>
+      <button mat-flat-button type="button" (click)="close()">Готово</button>
     </mat-dialog-actions>
   `,
   styles: `

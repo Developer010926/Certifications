@@ -1,5 +1,32 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { AbstractControl, FormGroup } from '@angular/forms';
+import { UI_TEXT } from '../../shared/utilities/ui-text';
+
+export function localizeServerValidationMessage(message: string, path = ''): string {
+  if (/required/i.test(message)) {
+    return UI_TEXT.required;
+  }
+
+  const normalizedPath = path.toLowerCase();
+  if (normalizedPath.includes('prolongationwarningmonths')) {
+    return 'Проверьте период предупреждения.';
+  }
+  if (normalizedPath.includes('prolongationalertmonths')) {
+    return 'Проверьте критический период.';
+  }
+  if (normalizedPath.includes('prolongationforyears')) {
+    return 'Проверьте срок продления.';
+  }
+  if (
+    normalizedPath.includes('certificationdate') ||
+    normalizedPath.includes('protocoldate') ||
+    normalizedPath.includes('prolongationsend') ||
+    normalizedPath.includes('prolongationreturned')
+  ) {
+    return 'Проверьте последовательность дат сертификации.';
+  }
+  return UI_TEXT.invalid;
+}
 
 export interface ApiProblem {
   readonly title?: string;
@@ -40,7 +67,12 @@ export function applyValidationErrors(form: FormGroup, error: unknown): boolean 
       .join('.');
     const control = form.get(path);
     if (control) {
-      control.setErrors({ ...control.errors, server: messages.join(' ') });
+      control.setErrors({
+        ...control.errors,
+        server: messages
+          .map((message) => localizeServerValidationMessage(message, serverPath))
+          .join(' '),
+      });
       control.markAsTouched();
       applied = true;
     }
@@ -57,7 +89,7 @@ export function controlError(control: AbstractControl | null, label: string): st
     return String(control.errors['server']);
   }
   if (control.errors['required']) {
-    return `${label} is required.`;
+    return `Поле «${label}» обязательно для заполнения.`;
   }
-  return `${label} is invalid.`;
+  return `Поле «${label}» содержит некорректное значение.`;
 }

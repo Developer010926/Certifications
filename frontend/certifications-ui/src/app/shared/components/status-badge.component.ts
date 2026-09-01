@@ -1,18 +1,18 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 const STATUS_LABELS: Readonly<Record<string, string>> = {
-  NotApplicable: 'Not applicable',
-  ContractValid: 'Contract valid',
-  CertificationPending: 'Certification pending',
-  CertificationInProgress: 'Certification in progress',
-  CertificationMissing: 'Certification missing',
+  NotApplicable: 'Не применяется',
+  ContractValid: 'Контракт действителен',
+  CertificationPending: 'Ожидается сертификация',
+  CertificationInProgress: 'Сертификация в процессе',
+  CertificationMissing: 'Сертификация отсутствует',
 };
 
 @Component({
   selector: 'app-status-badge',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <span class="status-badge" [class]="cssClass()" [attr.aria-label]="'Status: ' + label()">
+    <span class="status-badge" [class]="cssClass()" [attr.aria-label]="'Статус: ' + label()">
       {{ label() }}
     </span>
   `,
@@ -52,7 +52,7 @@ const STATUS_LABELS: Readonly<Record<string, string>> = {
 export class StatusBadgeComponent {
   readonly status = input<string | null | undefined>();
   readonly label = computed(
-    () => STATUS_LABELS[this.status() ?? ''] ?? `Unknown (${this.status() ?? '—'})`,
+    () => STATUS_LABELS[this.status() ?? ''] ?? `Неизвестный статус (${this.status() ?? '—'})`,
   );
   readonly cssClass = computed(() => {
     const value = this.status();

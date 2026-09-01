@@ -9,17 +9,18 @@ import { ApiErrorService } from '../../core/error-handling/api-error.service';
 import { PasswordDialogComponent } from '../../shared/components/password-dialog.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
 import { MATERIAL_IMPORTS } from '../../shared/material/material-imports';
+import { DateOnlyDisplayPipe } from '../../shared/utilities/date-only-display.pipe';
 
 @Component({
   selector: 'app-my-page',
-  imports: [StatusBadgeComponent, ...MATERIAL_IMPORTS],
+  imports: [DateOnlyDisplayPipe, StatusBadgeComponent, ...MATERIAL_IMPORTS],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="feature-page">
       <header class="page-header">
         <div>
-          <p class="eyebrow">Personal area</p>
-          <h1>My page</h1>
+          <p class="eyebrow">Личный кабинет</p>
+          <h1>Моя страница</h1>
         </div>
         <button
           mat-stroked-button
@@ -27,106 +28,112 @@ import { MATERIAL_IMPORTS } from '../../shared/material/material-imports';
           [disabled]="revealing()"
           (click)="revealPassword()"
         >
-          {{ revealing() ? 'Revealing…' : 'Reveal my password' }}
+          {{ revealing() ? 'Получение пароля…' : 'Показать мой пароль' }}
         </button>
       </header>
 
       @if (auth.currentUser(); as user) {
         <mat-card appearance="outlined" class="section-card">
-          <mat-card-header><mat-card-title>Personal information</mat-card-title></mat-card-header>
+          <mat-card-header><mat-card-title>Личные данные</mat-card-title></mat-card-header>
           <mat-card-content class="details-grid">
             <div>
-              <span>Personal ID</span><strong>{{ user.personalId }}</strong>
+              <span>Табельный номер</span><strong>{{ user.personalId }}</strong>
             </div>
             <div>
-              <span>First name</span><strong>{{ user.firstName }}</strong>
+              <span>Имя</span><strong>{{ user.firstName }}</strong>
             </div>
             <div>
-              <span>Middle name</span><strong>{{ user.middleName || '—' }}</strong>
+              <span>Отчество</span><strong>{{ user.middleName || '—' }}</strong>
             </div>
             <div>
-              <span>Last name</span><strong>{{ user.lastName }}</strong>
+              <span>Фамилия</span><strong>{{ user.lastName }}</strong>
             </div>
             <div>
-              <span>Administrator</span><strong>{{ user.isAdmin ? 'Yes' : 'No' }}</strong>
+              <span>Администратор</span><strong>{{ user.isAdmin ? 'Да' : 'Нет' }}</strong>
             </div>
           </mat-card-content>
         </mat-card>
       }
 
       @if (loading()) {
-        <mat-progress-bar mode="indeterminate" aria-label="Loading contract" />
+        <mat-progress-bar mode="indeterminate" aria-label="Загрузка контракта" />
       } @else if (errorMessage()) {
         <div class="state-panel" role="alert">
           <p>{{ errorMessage() }}</p>
-          <button mat-button type="button" (click)="load()">Retry</button>
+          <button mat-button type="button" (click)="load()">Повторить</button>
         </div>
       } @else if (details(); as data) {
         <mat-card appearance="outlined" class="section-card">
           <mat-card-header
-            ><mat-card-title>Current contract</mat-card-title><span class="header-spacer"></span
+            ><mat-card-title>Текущий контракт</mat-card-title><span class="header-spacer"></span
             ><app-status-badge [status]="data.contract.status"
           /></mat-card-header>
           <mat-card-content class="details-grid">
             <div>
-              <span>Position</span><strong>{{ data.contract.position }}</strong>
+              <span>Должность</span><strong>{{ data.contract.position }}</strong>
             </div>
             <div>
-              <span>Department</span><strong>{{ data.contract.department || '—' }}</strong>
+              <span>Подразделение</span><strong>{{ data.contract.department || '—' }}</strong>
             </div>
             <div>
-              <span>Division</span><strong>{{ data.contract.division || '—' }}</strong>
+              <span>Организационная единица</span
+              ><strong>{{ data.contract.division || '—' }}</strong>
             </div>
             <div>
-              <span>Contract date</span><strong>{{ data.contract.contractDate }}</strong>
+              <span>Дата начала контракта</span
+              ><strong>{{ data.contract.contractDate | dateOnly }}</strong>
             </div>
             <div>
-              <span>Valid to</span><strong>{{ data.contract.validTo || '—' }}</strong>
+              <span>Дата окончания</span
+              ><strong>{{
+                data.contract.validTo ? (data.contract.validTo | dateOnly) : '—'
+              }}</strong>
             </div>
             <div>
-              <span>Effective valid to</span><strong>{{ data.contract.effectiveValidTo }}</strong>
+              <span>Расчётная дата окончания</span
+              ><strong>{{ data.contract.effectiveValidTo | dateOnly }}</strong>
             </div>
           </mat-card-content>
         </mat-card>
         <mat-card appearance="outlined" class="section-card">
-          <mat-card-header><mat-card-title>Certification history</mat-card-title></mat-card-header>
+          <mat-card-header><mat-card-title>История сертификаций</mat-card-title></mat-card-header>
           <mat-card-content>
             @if (data.certifications.length === 0) {
-              <p class="empty-text">No certifications recorded.</p>
+              <p class="empty-text">Сертификации отсутствуют.</p>
             } @else {
               <div
                 class="table-scroll"
                 role="region"
-                aria-label="Certification history"
+                aria-label="История сертификаций"
                 tabindex="0"
               >
                 <table mat-table [dataSource]="data.certifications">
                   <ng-container matColumnDef="date"
-                    ><th mat-header-cell *matHeaderCellDef>Certification date</th>
+                    ><th mat-header-cell *matHeaderCellDef>Дата сертификации</th>
                     <td mat-cell *matCellDef="let row">
-                      {{ row.certificationDate }}
+                      {{ row.certificationDate | dateOnly }}
                     </td></ng-container
                   >
                   <ng-container matColumnDef="assessor"
-                    ><th mat-header-cell *matHeaderCellDef>Assessor</th>
+                    ><th mat-header-cell *matHeaderCellDef>Экзаменатор</th>
                     <td mat-cell *matCellDef="let row">{{ row.assessor }}</td></ng-container
                   >
                   <ng-container matColumnDef="protocol"
-                    ><th mat-header-cell *matHeaderCellDef>Protocol</th>
+                    ><th mat-header-cell *matHeaderCellDef>Дата протокола</th>
                     <td mat-cell *matCellDef="let row">
-                      {{ row.protocolDate || '—' }}
+                      {{ row.protocolDate ? (row.protocolDate | dateOnly) : '—' }}
                     </td></ng-container
                   >
                   <ng-container matColumnDef="sent"
-                    ><th mat-header-cell *matHeaderCellDef>Sent</th>
+                    ><th mat-header-cell *matHeaderCellDef>Дата отправки</th>
                     <td mat-cell *matCellDef="let row">
-                      {{ row.prolongationSend || '—' }}
+                      {{ row.prolongationSend ? (row.prolongationSend | dateOnly) : '—' }}
                     </td></ng-container
                   >
                   <ng-container matColumnDef="returned"
-                    ><th mat-header-cell *matHeaderCellDef>Returned</th>
+                    ><th mat-header-cell *matHeaderCellDef>Дата возврата</th>
                     <td mat-cell *matCellDef="let row">
-                      {{ row.prolongationReturned || '—' }}
+                      {{ row.prolongationReturned ? (row.prolongationReturned | dateOnly) : '—' }}
                     </td></ng-container
                   >
                   <tr mat-header-row *matHeaderRowDef="columns"></tr>
@@ -177,8 +184,9 @@ export class MyPageComponent implements OnInit {
       .subscribe({
         next: (response) => {
           const data = {
-            title: 'Your password',
-            description: 'Keep this password private. Copy it only to a secure destination.',
+            title: 'Ваш пароль',
+            description:
+              'Не сообщайте пароль посторонним. Копируйте его только в безопасное место.',
             password: response.password,
           };
           response.password = '';
